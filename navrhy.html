@@ -1,0 +1,211 @@
+<title>Návrhy grafiky OPTIONS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;800;900&family=Maven+Pro:wght@400;500;700&display=swap">
+<style>
+/* Layout: přehled 3 směrů, u každého dva telefony vedle sebe (domů + karta influencera), pod tím krátký popis */
+:root{
+  --navy:#16323F; --turq:#30E3CA; --mag:#D22A88; --paper:#F6F4EF; --ink:#16323F; --line:#DCE3E6; --page:#EEF1F2; --muted:#4F6672;
+  --disp:"League Spartan","Trebuchet MS",sans-serif; --body:"Maven Pro","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:44px}
+h1{font-family:var(--disp);font-weight:900;font-size:clamp(1.8rem,4vw,2.8rem);line-height:1;margin:0;text-wrap:balance}
+.intro{display:grid;gap:10px;max-width:64ch}
+.intro p{margin:0;color:var(--muted)}
+.dir{display:grid;gap:16px}
+.dir header{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.dir h2{font-family:var(--disp);font-weight:800;font-size:1.6rem;margin:0}
+.dir .letter{font-family:var(--disp);font-weight:900;font-size:1.6rem;color:var(--mag)}
+.phones{display:flex;gap:20px;flex-wrap:wrap}
+.phone{width:300px;max-width:100%;border-radius:34px;border:8px solid #0D1E26;overflow:hidden;position:relative;box-shadow:0 18px 40px -18px rgba(22,50,63,.45)}
+.scr{height:600px;overflow:hidden;padding:18px 16px;display:flex;flex-direction:column;gap:12px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:900px}
+.notes div{min-width:0}
+.notes b{display:block;font-family:var(--disp);font-size:1rem;margin-bottom:2px}
+.notes p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.45}
+svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+::selection{background:var(--turq);color:var(--navy)}
+
+/* ===== A: FEED (tmavý, jako sociální síť) ===== */
+.a .scr{background:var(--navy);color:#fff}
+.a .top{display:flex;justify-content:space-between;align-items:center;font-family:var(--disp);font-weight:800;font-size:.95rem}
+.a .top .dot{color:var(--turq)}
+.a .pts{background:#fff;color:var(--navy);border-radius:999px;padding:5px 10px;font-size:.8rem;font-variant-numeric:tabular-nums}
+.a h3{font-family:var(--disp);font-weight:900;font-size:2rem;line-height:.95;margin:6px 0 0;text-shadow:2px 0 var(--mag),-2px 0 var(--turq)}
+.a .sub{color:#B9CCD4;font-size:.85rem;margin:0}
+.a .tile{display:flex;gap:12px;align-items:center;padding:12px;border-radius:16px;background:#1F4252}
+.a .tile .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--turq);color:var(--navy)}
+.a .tile:nth-child(even) .ic{background:var(--mag);color:#fff}
+.a .tile b{display:block;font-family:var(--disp);font-size:1rem}
+.a .tile small{color:#9FB6C0}
+.a .tile .st{margin-left:auto;font-family:var(--disp);font-weight:800;color:var(--turq);font-size:.85rem}
+.a .prof{display:flex;gap:12px;align-items:center}
+.a .ava{width:64px;height:64px;border-radius:50%;background:linear-gradient(var(--navy),var(--navy)) padding-box,linear-gradient(135deg,var(--turq),var(--mag)) border-box;border:3px solid transparent;display:grid;place-items:center;font-family:var(--disp);font-weight:900;font-size:1.3rem}
+.a .stats{display:flex;gap:14px;font-size:.72rem;color:#9FB6C0}.a .stats b{display:block;color:#fff;font-size:.95rem;font-variant-numeric:tabular-nums}
+.a .g9{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.a .g9 i{aspect-ratio:1;border-radius:4px}
+.a .facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.78rem}
+.a .facts div{background:#1F4252;border-radius:10px;padding:8px}
+.a .facts span{display:block;color:#9FB6C0;font-size:.66rem;text-transform:uppercase;letter-spacing:.08em}
+.a .cta{margin-top:auto;background:var(--turq);color:var(--navy);border-radius:14px;padding:13px;text-align:center;font-family:var(--disp);font-weight:800}
+
+/* ===== B: NÁLEPKY (světlý, hravý) ===== */
+.b .scr{background:#FFF;color:var(--navy);background-image:radial-gradient(#E6ECEE 1.2px,transparent 1.2px);background-size:16px 16px}
+.b .burst{width:120px;height:120px;display:grid;place-items:center;text-align:center;color:#fff;font-family:var(--disp);font-weight:800;font-size:.95rem;line-height:1;background:var(--mag);clip-path:polygon(50% 0,59% 9%,71% 4%,75% 16%,88% 15%,86% 28%,97% 34%,90% 45%,100% 50%,90% 55%,97% 66%,86% 72%,88% 85%,75% 84%,71% 96%,59% 91%,50% 100%,41% 91%,29% 96%,25% 84%,12% 85%,14% 72%,3% 66%,10% 55%,0 50%,10% 45%,3% 34%,14% 28%,12% 15%,25% 16%,29% 4%,41% 9%);transform:rotate(-8deg);align-self:flex-end;margin:-6px -4px -40px 0;padding:14px}
+.b h3{font-family:var(--disp);font-weight:900;font-size:1.9rem;line-height:.95;margin:0;max-width:70%}
+.b h3 em{font-style:normal;background:var(--turq);padding:0 4px}
+.b .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.b .tile{background:#fff;border:2.5px solid var(--navy);border-radius:18px;padding:12px;display:grid;gap:6px;transform:rotate(var(--r,0deg))}
+.b .tile:nth-child(1){--r:-1.5deg}.b .tile:nth-child(2){--r:1.2deg}.b .tile:nth-child(3){--r:1deg}.b .tile:nth-child(4){--r:-1.2deg}
+.b .tile b{font-family:var(--disp);font-size:.98rem;line-height:1.05}
+.b .tile small{color:var(--muted);font-size:.72rem}
+.b .tile .ic{color:var(--mag)}
+.b .tile.done{background:var(--turq)}
+.b .wide{grid-column:span 2}
+.b .card{background:#fff;border:2.5px solid var(--navy);border-radius:22px;padding:14px;display:grid;gap:10px}
+.b .ava{width:58px;height:58px;border-radius:50%;background:var(--turq);border:2.5px solid var(--navy);display:grid;place-items:center;font-family:var(--disp);font-weight:900}
+.b .hd{display:flex;gap:10px;align-items:center}
+.b .hd b{font-family:var(--disp);font-size:1.05rem}
+.b .chips{display:flex;flex-wrap:wrap;gap:6px}
+.b .chips span{border:2px solid var(--navy);border-radius:999px;padding:3px 9px;font-size:.75rem;font-weight:700}
+.b .chips span.hot{background:var(--mag);border-color:var(--mag);color:#fff}
+.b .g9{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.b .g9 i{aspect-ratio:1;border-radius:8px;border:2px solid var(--navy)}
+.b .price{font-family:var(--disp);font-weight:900;font-size:1.6rem;font-variant-numeric:tabular-nums}
+.b .cta{margin-top:auto;background:var(--navy);color:#fff;border-radius:16px;padding:13px;text-align:center;font-family:var(--disp);font-weight:800}
+
+/* ===== C: AGENTURNÍ BRIEF (papír, zakázky, razítka) ===== */
+.c .scr{background:var(--paper);color:var(--navy)}
+.c .head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--navy);padding-bottom:10px}
+.c .head b{font-family:var(--disp);font-weight:900;font-size:1rem;letter-spacing:.02em}
+.c .head span{font-size:.75rem;font-variant-numeric:tabular-nums}
+.c h3{font-family:var(--disp);font-weight:800;font-size:1.55rem;line-height:1.02;margin:0}
+.c .job{background:#fff;border:1px solid var(--line);border-radius:6px;padding:11px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;box-shadow:0 2px 6px -3px rgba(22,50,63,.25)}
+.c .job .ic{color:var(--navy)}
+.c .job b{display:block;font-family:var(--disp);font-size:.98rem}
+.c .job small{color:var(--muted);font-size:.72rem;font-variant-numeric:tabular-nums}
+.c .stamp{font-family:var(--disp);font-weight:900;font-size:.66rem;letter-spacing:.08em;color:var(--mag);border:2px solid var(--mag);border-radius:4px;padding:3px 6px;transform:rotate(-8deg)}
+.c .stamp.todo{color:var(--muted);border-color:var(--line);transform:none}
+.c .brief{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:10px;position:relative}
+.c .brief .clip{position:absolute;top:-10px;right:18px;width:22px;height:34px;border:3px solid #8DA2AB;border-radius:11px}
+.c .row{display:flex;justify-content:space-between;font-size:.8rem;border-bottom:1px dashed var(--line);padding-bottom:6px;font-variant-numeric:tabular-nums}
+.c .row span{color:var(--muted)}
+.c .ava{width:54px;height:54px;border-radius:4px;background:var(--turq);display:grid;place-items:center;font-family:var(--disp);font-weight:900}
+.c .hd{display:flex;gap:10px;align-items:center}
+.c .hd b{font-family:var(--disp);font-size:1.05rem;display:block}
+.c .hd small{color:var(--muted)}
+.c .g9{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.c .g9 i{aspect-ratio:1}
+.c .cta{margin-top:auto;background:var(--mag);color:#fff;border-radius:6px;padding:13px;text-align:center;font-family:var(--disp);font-weight:800}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cam" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20a7 7 0 0 1 14 0M15 14.5a5 5 0 0 1 7 5.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></symbol>
+</svg>
+
+<div class="wrap">
+  <section class="intro">
+    <h1>Tři směry grafiky pro stanoviště Marketing</h1>
+    <p>Všechny vychází z brand manuálu ShortPRO (dříve TikTokuj): tmavě modrá #16323F, tyrkysová #30E3CA, magenta #D22A88, písma Spartan a Maven Pro. Pro každý směr je tu úvodní obrazovka a karta influencera. Ilustrace a fotky by se pak dogenerovaly přes Higgsfield.</p>
+  </section>
+
+  <!-- A -->
+  <section class="dir a">
+    <header><span class="letter">A</span><h2>Feed</h2></header>
+    <div class="phones">
+      <div class="phone"><div class="scr">
+        <div class="top"><span>SHORTPRO<span class="dot">.</span></span><span class="pts">240 b</span></div>
+        <h3>Dnes děláš marketing pro Bataron</h3>
+        <p class="sub">5 úkolů jako v agentuře. Za každý razítko v Options.</p>
+        <div class="tile"><span class="ic"><svg class="i"><use href="#i-cam"/></svg></span><span><b>Natoč Story</b><small>Kreativa · 4 min</small></span><span class="st">100 b</span></div>
+        <div class="tile"><span class="ic"><svg class="i"><use href="#i-bulb"/></svg></span><span><b>Marketingové triky</b><small>Psychologie prodeje · 3 min</small></span><span class="st">86 b</span></div>
+        <div class="tile"><span class="ic"><svg class="i"><use href="#i-user"/></svg></span><span><b>Vyber influencera</b><small>Analytika · 3 min</small></span><span class="st">›</span></div>
+        <div class="tile"><span class="ic"><svg class="i"><use href="#i-team"/></svg></span><span><b>Sestav tým</b><small>Projekťák · 3 min</small></span><span class="st">›</span></div>
+        <div class="tile"><span class="ic"><svg class="i"><use href="#i-chat"/></svg></span><span><b>Kdo to řekl?</b><small>Role v agentuře · 2 min</small></span><span class="st">›</span></div>
+      </div></div>
+      <div class="phone"><div class="scr">
+        <div class="top"><span>Rozpočet</span><span class="pts">15 000 / 30 000 Kč</span></div>
+        <div class="prof"><div class="ava">FL</div><div><b style="font-family:var(--disp);font-size:1.05rem">@foodie.linh</b><div class="stats"><span><b>268</b>příspěvků</span><span><b>40 tis.</b>sledujících</span><span><b>520</b>sleduje</span></div></div></div>
+        <p class="sub" style="color:#fff">Linh | Asijská kuchyně. Vietnamka v Praze, recepty do 15 minut a tipy na bistra.</p>
+        <div class="g9"><i style="background:#E0533D"></i><i style="background:#F2A541"></i><i style="background:#2A9D8F"></i><i style="background:#264653"></i><i style="background:#E76F51"></i><i style="background:#30E3CA"></i><i style="background:#D22A88"></i><i style="background:#F4D35E"></i><i style="background:#3D5A80"></i></div>
+        <div class="facts"><div><span>Publikum</span>18 až 30 let, Praha</div><div><span>Engagement</span>8,4 %</div><div><span>Cena za Story</span>12 000 Kč</div><div><span>Obsah</span>jídlo, recepty</div></div>
+        <div class="cta">Vybrat do kampaně</div>
+      </div></div>
+    </div>
+    <div class="notes">
+      <div><b>Pocit</b><p>Jako appka, kterou mají v mobilu. Tmavá, rychlá, s tyrkysovo-magentovým „glitch“ efektem, který připomíná TikTok a původní logo TikTokuj.</p></div>
+      <div><b>Plus</b><p>Studenti ji hned pochopí. Dobře vypadá i na monitoru se žebříčkem.</p></div>
+      <div><b>Riziko</b><p>Tmavé obrazovky jsou ve světlé hale hůř čitelné a podobných appek je hodně.</p></div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="dir b">
+    <header><span class="letter">B</span><h2>Nálepky</h2></header>
+    <div class="phones">
+      <div class="phone"><div class="scr">
+        <div class="burst">Agentura na 15 minut</div>
+        <h3>Prodej <em>Bataron</em> jako profík</h3>
+        <div class="tiles">
+          <div class="tile done"><span class="ic"><svg class="i"><use href="#i-cam"/></svg></span><b>Natoč Story</b><small>Hotovo · 100 b</small></div>
+          <div class="tile"><span class="ic"><svg class="i"><use href="#i-bulb"/></svg></span><b>Marketingové triky</b><small>3 min</small></div>
+          <div class="tile"><span class="ic"><svg class="i"><use href="#i-user"/></svg></span><b>Vyber influencera</b><small>3 min</small></div>
+          <div class="tile"><span class="ic"><svg class="i"><use href="#i-team"/></svg></span><b>Sestav tým</b><small>3 min</small></div>
+          <div class="tile wide"><span class="ic"><svg class="i"><use href="#i-chat"/></svg></span><b>Kdo to řekl?</b><small>2 min</small></div>
+        </div>
+      </div></div>
+      <div class="phone"><div class="scr">
+        <div class="card">
+          <div class="hd"><div class="ava">FL</div><div><b>@foodie.linh</b><br><small style="color:var(--muted)">40 tis. sledujících · 268 příspěvků</small></div></div>
+          <div class="g9"><i style="background:#FFD9C7"></i><i style="background:#30E3CA"></i><i style="background:#FBE3F0"></i><i style="background:#FFF1B8"></i><i style="background:#D22A88"></i><i style="background:#CFF5EF"></i><i style="background:#FFD9C7"></i><i style="background:#16323F"></i><i style="background:#FBE3F0"></i></div>
+          <p style="margin:0;font-size:.85rem">Vietnamka v Praze. Recepty do 15 minut a tipy na bistra.</p>
+          <div class="chips"><span>18 až 30 let</span><span>Praha</span><span class="hot">engagement 8,4 %</span></div>
+          <div class="price">12 000 Kč</div>
+        </div>
+        <div class="cta">Beru ji do kampaně</div>
+      </div></div>
+    </div>
+    <div class="notes">
+      <div><b>Pocit</b><p>Hravé, jako nálepky na notebooku. Vychází z hvězdicové nálepky ShortPRO. Lehce pootočené karty, silné obrysy.</p></div>
+      <div><b>Plus</b><p>Světlé, čitelné v hale, výrazně se odliší od ostatních stanovišť. Nálepka jde vytisknout i jako skutečná odměna.</p></div>
+      <div><b>Riziko</b><p>Pro starší středoškoláky může působit trochu dětsky, pokud se to přežene.</p></div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="dir c">
+    <header><span class="letter">C</span><h2>Agenturní brief</h2></header>
+    <div class="phones">
+      <div class="phone"><div class="scr">
+        <div class="head"><b>SHORTPRO · ZAKÁZKY</b><span>28. 11. 2026</span></div>
+        <h3>Klient Bataron čeká na 5 výstupů</h3>
+        <div class="job"><span class="ic"><svg class="i"><use href="#i-cam"/></svg></span><span><b>Story pro Instagram</b><small>Kreativa · deadline 4 min</small></span><span class="stamp">SCHVÁLENO</span></div>
+        <div class="job"><span class="ic"><svg class="i"><use href="#i-bulb"/></svg></span><span><b>Prodejní triky</b><small>Strategie · 3 min</small></span><span class="stamp todo">ČEKÁ</span></div>
+        <div class="job"><span class="ic"><svg class="i"><use href="#i-user"/></svg></span><span><b>Výběr influencera</b><small>Analytika · 3 min</small></span><span class="stamp todo">ČEKÁ</span></div>
+        <div class="job"><span class="ic"><svg class="i"><use href="#i-team"/></svg></span><span><b>Tým kampaně</b><small>Projekt · 3 min</small></span><span class="stamp todo">ČEKÁ</span></div>
+        <div class="job"><span class="ic"><svg class="i"><use href="#i-chat"/></svg></span><span><b>Kdo to řekl?</b><small>Porada · 2 min</small></span><span class="stamp todo">ČEKÁ</span></div>
+      </div></div>
+      <div class="phone"><div class="scr">
+        <div class="head"><b>PODKLAD 3/5</b><span>Rozpočet 30 000 Kč</span></div>
+        <div class="brief"><span class="clip"></span>
+          <div class="hd"><div class="ava">FL</div><div><b>@foodie.linh</b><small>Asijská kuchyně · Praha</small></div></div>
+          <div class="g9"><i style="background:#E0533D"></i><i style="background:#F2A541"></i><i style="background:#2A9D8F"></i><i style="background:#264653"></i><i style="background:#E76F51"></i><i style="background:#30E3CA"></i><i style="background:#D22A88"></i><i style="background:#F4D35E"></i><i style="background:#3D5A80"></i></div>
+          <div class="row"><span>Sledující</span><b>40 000</b></div>
+          <div class="row"><span>Publikum</span><b>18 až 30, Praha</b></div>
+          <div class="row"><span>Engagement</span><b>8,4 %</b></div>
+          <div class="row"><span>Cena za Story</span><b>12 000 Kč</b></div>
+        </div>
+        <div class="cta">Navrhnout klientovi</div>
+      </div></div>
+    </div>
+    <div class="notes">
+      <div><b>Pocit</b><p>Student si opravdu připadá jako v agentuře: zakázky od klienta, podklady na papíře, razítko „schváleno“ jako odměna.</p></div>
+      <div><b>Plus</b><p>Nejvíc odpovídá zadání Options (realistický pohled na práci). Působí dospěleji, sedne i maturantům.</p></div>
+      <div><b>Riziko</b><p>Méně „wow“ na první pohled, víc stojí na detailech a textech.</p></div>
+    </div>
+  </section>
+</div>
