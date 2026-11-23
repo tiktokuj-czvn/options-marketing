@@ -302,7 +302,7 @@ function tilt(el){
 function header(t, n){ return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role}</span><span>Zakázka ${n} z 5</span></div>` }
 function finish(task, pts, max, text){
   setScore(task, pts); buzz([20,40,30]);
-  return `<div class="result"><span class="bigstamp">SCHVÁLENO</span><span class="big">${pts} / ${max} b</span><p>${text}</p>
+  return `<div class="result"><span class="bigstamp">${pts >= max/2 ? 'SCHVÁLENO' : 'ODEVZDÁNO'}</span><span class="big">${pts} / ${max} b</span><p>${text}</p>
   <p>Razítko si vyzvedni v aplikaci Options.</p>
   <button class="btn full" data-go="">Další zakázka</button></div>`;
 }
