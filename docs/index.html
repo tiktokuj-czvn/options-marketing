@@ -422,31 +422,31 @@ const stars = n => `<span class="stars">${Array.from({length:5},(_,i)=>`<svg vie
 const TRICKS = [
   {scene:()=>`<div class="cupbox">${img('cups3',120)}<div class="prices3"><span class="price">39 Kč</span><span class="price">59 Kč</span><span class="price">65 Kč</span></div><div class="prices3 lbls"><span>Malý</span><span>Střední</span><span>Velký</span></div></div>`,
    q:'Proč obchod nabízí střední kelímek jen o 6 Kč levněji než velký?',
-   o:['Ve trojici to na regálu vypadá hezky.','Střední je návnada: vedle něj vypadá velký jako jasná výhoda, takže lidé koupí velký.','Zákazníci chtějí co nejvíc možností.'], a:1,
+   o:['Plná police: obchod chce, aby regál vypadal pestře, a tři velikosti vedle sebe působí jako bohatá nabídka.','Návnada: střední je skoro stejně drahý jako velký, takže velký vedle něj působí jako jasně výhodnější koupě.','Segmentace: každá velikost je pro jiného člověka, malý pro děti, střední pro dospělé a velký pro hladové studenty.'], a:1, pos:0,
    e:['Efekt návnady','Střední kelímek se skoro nekupuje. Je tam proto, aby velký vypadal výhodně. Stejný trik uvidíš u popcornu v kině nebo u předplatného.']},
   {scene:()=>`<div class="cupbox">${img('cup',140)}<span class="price"><s>89 Kč</s>49 Kč</span><span class="tag hot">AKCE</span></div>`,
    q:'Proč je na cenovce vidět i přeškrtnutá vyšší cena?',
-   o:['Obchod se spletl a nestihl cenovku vyměnit.','Přikazuje to zákon u každého zboží.','První číslo se uloží do hlavy jako kotva, takže 49 Kč pak působí levně.'], a:2,
+   o:['Transparentnost: obchod musí ukázat, o kolik zboží zlevnil, jinak by mu lidé nevěřili, že jde o skutečnou akci.','Výprodej: přeškrtnutá cena ukazuje, že zboží brzy projde, a obchod se ho chce zbavit dřív, než se vyhodí.','Kotva: vyšší cena se uloží do hlavy jako měřítko, a když pak uvidíš 49 Kč, působí to jako výborná cena.'], a:2, pos:2,
    e:['Kotva','Mozek porovnává s prvním číslem, které uvidí. Proto e-shopy ukazují původní cenu, i když se za ni skoro nikdy neprodávalo.']},
   {scene:()=>`<div class="cupbox">${img('cup',140,'mango')}<span class="tag">Limitovaná příchuť Mango Chili</span><span class="tag hot">Zbývá 12 kusů</span></div>`,
    q:'Co dělá nápis „Zbývá 12 kusů“?',
-   o:['Využívá vzácnost: když něčeho ubývá, chceme to víc a rozhodujeme se rychleji.','Pomáhá skladníkovi s inventurou.','Upozorňuje, že produkt brzy projde.'], a:0,
+   o:['Vzácnost: když něčeho ubývá, chceme to víc a rozhodujeme se rychleji, abychom o to náhodou nepřišli.','Informace: obchod upozorňuje, kolik kusů zbývá, aby si lidé mohli nákup v klidu naplánovat dopředu.','Test trhu: příchuť je nová a obchod si zkouší, jestli o ni bude zájem, než jí objedná větší množství.'], a:0, pos:1,
    e:['Vzácnost a FOMO','Strach, že o něco přijdeme, nás žene k rychlému nákupu. Používá se u dropů tenisek, vstupenek i limitovaných příchutí.']},
   {scene:()=>`<div class="cups"><div class="cupbox">${img('cup',110)}<span class="price">50 Kč</span></div><div class="cupbox">${img('cup',110)}<span class="price">49,90 Kč</span></div></div>`,
    q:'Proč obchody píšou 49,90 Kč místo 50 Kč?',
-   o:['Kvůli vracení drobných.','Mozek čte zleva: první číslice je 4, takže cena působí o hodně nižší než 50.','Je to levnější na výrobu cenovky.'], a:1,
+   o:['Daně: cena s DPH se při výpočtu zaokrouhluje dolů, a proto u většiny zboží vychází na devadesát haléřů.','Levá číslice: čteme zleva, takže si 49,90 zapamatujeme jako 49 a cena působí výrazně nižší než padesátka.','Kontrola pokladních: lichá cena nutí vracet drobné, takže pokladní musí každý nákup poctivě namarkovat.'], a:1, pos:0,
    e:['Efekt levé číslice','Rozdíl je 10 haléřů, ale 49 vypadá jako jiná kategorie než 50. Proto téměř žádná cena nekončí nulou.']},
   {scene:()=>`<div class="cupbox">${img('cup',120)}${stars(5)}<b>4,8 z 5</b><span><b>12 000 lidí</b> už ochutnalo</span></div>`,
    q:'Proč je na reklamě hodnocení a počet lidí, kteří produkt zkusili?',
-   o:['Aby reklama nebyla prázdná.','Kvůli kontrole kvality.','Když něco zkusilo hodně lidí, věříme, že je to dobré. Říká se tomu sociální důkaz.'], a:2,
+   o:['Garance kvality: hodnocení potvrzuje nezávislá zkušebna, a obchod tím dokládá, že je produkt bezpečný.','Zpětná vazba: číslo motivuje zákazníky, aby po ochutnání sami napsali recenzi a pomohli tak výrobci.','Sociální důkaz: když něco zkusilo hodně lidí, věříme, že to bude dobré, a nebojíme se to zkusit taky.'], a:2, pos:2,
    e:['Sociální důkaz','Řídíme se podle ostatních. Recenze, počet zhlédnutí a fronta před bistrem fungují stejně.']},
   {scene:()=>`<div class="shelf">${[['Nahoře',0],['V úrovni očí',1],['Dole',0]].map(r=>`<div class="row ${r[1]?'gold':''}"><span class="lbl">${r[0]}</span>${r[1]?img('cup',58)+img('cup',58)+img('cup',58):box('#C9B8A6')+box('#8DA2AB')+box('#C9B8A6')}</div>`).join('')}</div>`,
    q:'Výrobce platí obchodu navíc, aby byl Bataron v úrovni očí. Proč?',
-   o:['V úrovni očí se prodává nejvíc. Je to zlatá zóna regálu.','Dole by se nudle rozmačkaly.','Nahoře je regál nejdražší.'], a:0,
+   o:['Zlatá zóna: věci v úrovni očí vidíme jako první a bez ohýbání, a proto se z téhle police prodává nejvíc.','Ochrana zboží: lehké kelímky patří doprostřed, protože dole by se pomačkaly a nahoře by mohly spadnout.','Řazení podle ceny: obchod dává levné zboží dolů, drahé nahoru a to se střední cenou doprostřed regálu.'], a:0, pos:1,
    e:['Zlatá zóna regálu','Kupujeme hlavně to, co vidíme bez ohýbání. Dražší značky si proto kupují místo v očích, dětské sladkosti bývají v úrovni očí dětí.']},
   {scene:()=>`<div class="cups"><div class="cupbox">${img('cup',90)}<span class="price">49 Kč</span></div><span class="price">+</span><div class="cupbox">${drink}<span class="price">35 Kč</span></div><span class="price">=</span><div class="cupbox"><span class="tag hot">KOMBO</span><span class="price"><s>84 Kč</s>69 Kč</span></div></div>`,
    q:'Proč se vyplatí prodávat nudle s pitím jako kombo?',
-   o:['Pití se jinak neprodá.','Zákazník ušetří, ale utratí víc, než chtěl. Obchodu roste průměrný nákup.','Je to pohodlnější pro pokladní.'], a:1,
+   o:['Doprodej: ledový čaj se sám moc neprodává, tak ho obchod přibalí k nudlím, aby mu nezůstal ve skladu.','Balíček: zákazník má pocit, že ušetřil, ale utratí víc, než chtěl, a obchodu tak roste průměrný nákup.','Pohodlí: zákazník nemusí přemýšlet, co si vzít k jídlu, a fronta u pokladny se díky tomu zrychlí.'], a:1, pos:0,
    e:['Balíček','Přijdeš si pro nudle za 49 Kč a odcházíš s nákupem za 69 Kč a dobrým pocitem. Tak fungují menu v každém fast foodu.']},
 ];
 function triky(){
@@ -462,7 +462,7 @@ function triky(){
     return;
   }
   const Q = TRICKS[sv.q];
-  if(!sv.order || sv.order.q !== sv.q) sv.order = {q:sv.q, o:shuffle(Q.o.map((x,i)=>i))};
+  if(!sv.order || sv.order.q !== sv.q){ const rest = Q.o.map((x,i)=>i).filter(i=>i!==Q.a); rest.splice(Q.pos,0,Q.a); sv.order = {q:sv.q, o:rest} }
   const order = sv.order.o, wrong = new Set(sv.wrong);
   app.innerHTML = `${header(t,2)}
   <div class="qprog" aria-label="Otázka ${sv.q+1} ze ${TRICKS.length}">${TRICKS.map((x,i)=>`<i class="${i<sv.q?'ok':i===sv.q?'cur':''}"></i>`).join('')}</div>
