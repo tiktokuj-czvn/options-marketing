@@ -159,7 +159,8 @@ svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .role b{display:block;font-family:var(--disp);font-size:1rem}
 details.legend summary{cursor:pointer;font-weight:700}
 /* Kdo to řekl */
-.cast{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cast{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.person span{min-width:0}
 .person{background:var(--card);border:2px solid var(--line);border-radius:10px;padding:10px 6px;display:grid;justify-items:center;gap:4px;text-align:center;font-size:.85rem;font-weight:700;position:relative}
 .person svg{width:100%;max-width:84px;height:auto}
 .person.armed{border-color:var(--mag)}
@@ -175,11 +176,48 @@ details.legend summary{cursor:pointer;font-weight:700}
 .tv h1{color:#fff;font-size:clamp(1.8rem,4.5vw,3.2rem)}
 .tv .back{color:#CFE0E6}
 .board{display:grid;gap:8px}
-.lb{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;background:var(--navy2);border-radius:8px;padding:12px 16px;font-variant-numeric:tabular-nums;font-size:clamp(1rem,2.2vw,1.6rem)}
+.lb{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--navy2);border-radius:8px;padding:12px 16px;font-variant-numeric:tabular-nums;font-size:clamp(1rem,2.2vw,1.6rem)}
 .lb .r,.lb .s{font-family:var(--disp);font-weight:900}
 .lb.p1{background:var(--turq);color:var(--navy)}.lb.p2{background:#CFE0E6;color:var(--navy)}.lb.p3{background:#F3C2DD;color:var(--navy)}
 .lb.me{outline:3px solid var(--mag)}
 .demo{font-size:.85rem;color:#CFE0E6;text-align:center}
+.job:disabled{opacity:.45;cursor:not-allowed}
+.stamp.mid{color:var(--navy);border-color:var(--navy)}
+.stamp.low{color:var(--muted);border-color:#B9C6CC}
+.result .bigstamp.mid{color:#fff;border-color:#fff}
+.result .bigstamp.low{color:#9FB6C0;border-color:#9FB6C0}
+.opt .mark{margin-left:auto;display:grid}
+.opt .mark svg{width:22px;height:22px;fill:none;stroke-width:3;stroke-linecap:round}
+.opt.ok .mark svg{stroke:var(--turq-d)}.opt.bad .mark svg{stroke:var(--bad)}
+.explain.y{border-color:var(--turq-d)}.explain.n{border-color:var(--bad)}
+.recap{display:grid;gap:6px}
+.fb.flag{margin:12px 14px 0}
+.quote .who.y{color:var(--turq-d)}.quote .who.n{color:var(--navy)}
+.quote .who svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:3;vertical-align:-2px}
+.castbar{position:sticky;bottom:0;z-index:3;background:var(--paper);padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;border-top:1px solid var(--line)}
+.castbar .cast{gap:6px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.castbar .person{display:flex;align-items:center;gap:6px;padding:6px;min-height:48px;font-size:.74rem;text-align:left;line-height:1.1}
+.castbar .person svg{width:26px;max-width:26px;flex:none}
+.castbar .person .badge{top:-6px;right:-4px}
+.need.warn{color:var(--bad);font-weight:700}
+.back{min-height:44px}
+.chip{min-height:44px}
+body.tvmode .bar{display:none}
+body.tvmode .wrap{max-width:none}
+body.tvmode{padding-block:16px}
+.tvgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
+@media (min-width:900px){.tvgrid{grid-template-columns:minmax(0,1fr) minmax(220px,24vw)}}
+.tvmain{display:grid;gap:14px;min-width:0}
+.tvqr{background:#fff;color:var(--navy);border-radius:12px;padding:18px;display:grid;justify-items:center;gap:6px;text-align:center}
+.tvqr b{font-family:var(--disp);font-weight:900;font-size:clamp(1.2rem,2vw,2rem)}
+.tvqr span{color:var(--muted)}
+.qrbox{width:100%;max-width:280px}
+.qrbox svg{width:100%;height:auto;display:block}
+.qrbox path{fill:var(--navy)}
+.lb .nm{font-family:var(--disp);font-weight:700;min-width:0;overflow-wrap:anywhere}
+.tv .lb{font-size:clamp(1.1rem,2.6vw,2.6rem)}
+.empty{background:var(--navy2);border-radius:8px;padding:24px;font-family:var(--disp);font-weight:800;font-size:clamp(1.1rem,2.4vw,2rem)}
+@media (max-width:380px){.hero-cup{width:80px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -210,47 +248,57 @@ details.legend summary{cursor:pointer;font-weight:700}
 </div>
 
 <script>
-/* SCORE_API = server pro společný žebříček (POST {nick,task,points}, GET -> [{nick,total}]). Bez něj jen toto zařízení.
+/* SCORE_API = URL Google Apps Script webové aplikace pro společný žebříček.
+   POST (text/plain JSON {nick,task,points}) zapíše body, GET vrátí [{nick,total}]. Prázdné = jen toto zařízení.
    STORY_PIN = kód, který zadá dobrovolník u Story. */
 const SCORE_API = '';
 const STORY_PIN = '2811';
+const QR_SVG = `<svg version="1.1" viewBox="0 0 37 37" xmlns="http://www.w3.org/2000/svg"><path d="M2,2H3V3H2zM3,2H4V3H3zM4,2H5V3H4zM5,2H6V3H5zM6,2H7V3H6zM7,2H8V3H7zM8,2H9V3H8zM12,2H13V3H12zM13,2H14V3H13zM16,2H17V3H16zM20,2H21V3H20zM22,2H23V3H22zM23,2H24V3H23zM24,2H25V3H24zM28,2H29V3H28zM29,2H30V3H29zM30,2H31V3H30zM31,2H32V3H31zM32,2H33V3H32zM33,2H34V3H33zM34,2H35V3H34zM2,3H3V4H2zM8,3H9V4H8zM10,3H11V4H10zM15,3H16V4H15zM16,3H17V4H16zM19,3H20V4H19zM24,3H25V4H24zM28,3H29V4H28zM34,3H35V4H34zM2,4H3V5H2zM4,4H5V5H4zM5,4H6V5H5zM6,4H7V5H6zM8,4H9V5H8zM10,4H11V5H10zM11,4H12V5H11zM14,4H15V5H14zM15,4H16V5H15zM18,4H19V5H18zM19,4H20V5H19zM20,4H21V5H20zM21,4H22V5H21zM22,4H23V5H22zM23,4H24V5H23zM24,4H25V5H24zM25,4H26V5H25zM28,4H29V5H28zM30,4H31V5H30zM31,4H32V5H31zM32,4H33V5H32zM34,4H35V5H34zM2,5H3V6H2zM4,5H5V6H4zM5,5H6V6H5zM6,5H7V6H6zM8,5H9V6H8zM10,5H11V6H10zM11,5H12V6H11zM13,5H14V6H13zM17,5H18V6H17zM21,5H22V6H21zM23,5H24V6H23zM25,5H26V6H25zM26,5H27V6H26zM28,5H29V6H28zM30,5H31V6H30zM31,5H32V6H31zM32,5H33V6H32zM34,5H35V6H34zM2,6H3V7H2zM4,6H5V7H4zM5,6H6V7H5zM6,6H7V7H6zM8,6H9V7H8zM11,6H12V7H11zM12,6H13V7H12zM13,6H14V7H13zM14,6H15V7H14zM15,6H16V7H15zM17,6H18V7H17zM19,6H20V7H19zM20,6H21V7H20zM24,6H25V7H24zM25,6H26V7H25zM28,6H29V7H28zM30,6H31V7H30zM31,6H32V7H31zM32,6H33V7H32zM34,6H35V7H34zM2,7H3V8H2zM8,7H9V8H8zM18,7H19V8H18zM19,7H20V8H19zM22,7H23V8H22zM23,7H24V8H23zM28,7H29V8H28zM34,7H35V8H34zM2,8H3V9H2zM3,8H4V9H3zM4,8H5V9H4zM5,8H6V9H5zM6,8H7V9H6zM7,8H8V9H7zM8,8H9V9H8zM10,8H11V9H10zM12,8H13V9H12zM14,8H15V9H14zM16,8H17V9H16zM18,8H19V9H18zM20,8H21V9H20zM22,8H23V9H22zM24,8H25V9H24zM26,8H27V9H26zM28,8H29V9H28zM29,8H30V9H29zM30,8H31V9H30zM31,8H32V9H31zM32,8H33V9H32zM33,8H34V9H33zM34,8H35V9H34zM10,9H11V10H10zM11,9H12V10H11zM12,9H13V10H12zM13,9H14V10H13zM14,9H15V10H14zM16,9H17V10H16zM20,9H21V10H20zM24,9H25V10H24zM25,9H26V10H25zM26,9H27V10H26zM2,10H3V11H2zM8,10H9V11H8zM10,10H11V11H10zM15,10H16V11H15zM16,10H17V11H16zM17,10H18V11H17zM19,10H20V11H19zM24,10H25V11H24zM25,10H26V11H25zM26,10H27V11H26zM27,10H28V11H27zM28,10H29V11H28zM31,10H32V11H31zM32,10H33V11H32zM33,10H34V11H33zM2,11H3V12H2zM3,11H4V12H3zM6,11H7V12H6zM10,11H11V12H10zM11,11H12V12H11zM14,11H15V12H14zM16,11H17V12H16zM17,11H18V12H17zM18,11H19V12H18zM20,11H21V12H20zM21,11H22V12H21zM25,11H26V12H25zM30,11H31V12H30zM31,11H32V12H31zM32,11H33V12H32zM33,11H34V12H33zM2,12H3V13H2zM3,12H4V13H3zM5,12H6V13H5zM6,12H7V13H6zM7,12H8V13H7zM8,12H9V13H8zM11,12H12V13H11zM13,12H14V13H13zM14,12H15V13H14zM17,12H18V13H17zM20,12H21V13H20zM23,12H24V13H23zM24,12H25V13H24zM26,12H27V13H26zM30,12H31V13H30zM32,12H33V13H32zM33,12H34V13H33zM3,13H4V14H3zM4,13H5V14H4zM7,13H8V14H7zM9,13H10V14H9zM12,13H13V14H12zM16,13H17V14H16zM17,13H18V14H17zM21,13H22V14H21zM22,13H23V14H22zM27,13H28V14H27zM28,13H29V14H28zM29,13H30V14H29zM30,13H31V14H30zM31,13H32V14H31zM32,13H33V14H32zM33,13H34V14H33zM34,13H35V14H34zM3,14H4V15H3zM5,14H6V15H5zM6,14H7V15H6zM8,14H9V15H8zM10,14H11V15H10zM11,14H12V15H11zM12,14H13V15H12zM13,14H14V15H13zM14,14H15V15H14zM15,14H16V15H15zM16,14H17V15H16zM17,14H18V15H17zM18,14H19V15H18zM19,14H20V15H19zM20,14H21V15H20zM21,14H22V15H21zM22,14H23V15H22zM25,14H26V15H25zM26,14H27V15H26zM27,14H28V15H27zM28,14H29V15H28zM2,15H3V16H2zM3,15H4V16H3zM4,15H5V16H4zM5,15H6V16H5zM11,15H12V16H11zM13,15H14V16H13zM15,15H16V16H15zM16,15H17V16H16zM18,15H19V16H18zM22,15H23V16H22zM25,15H26V16H25zM28,15H29V16H28zM29,15H30V16H29zM32,15H33V16H32zM33,15H34V16H33zM34,15H35V16H34zM2,16H3V17H2zM3,16H4V17H3zM5,16H6V17H5zM6,16H7V17H6zM7,16H8V17H7zM8,16H9V17H8zM13,16H14V17H13zM16,16H17V17H16zM19,16H20V17H19zM21,16H22V17H21zM23,16H24V17H23zM24,16H25V17H24zM26,16H27V17H26zM27,16H28V17H27zM28,16H29V17H28zM29,16H30V17H29zM30,16H31V17H30zM32,16H33V17H32zM33,16H34V17H33zM2,17H3V18H2zM4,17H5V18H4zM5,17H6V18H5zM13,17H14V18H13zM17,17H18V18H17zM21,17H22V18H21zM25,17H26V18H25zM26,17H27V18H26zM27,17H28V18H27zM29,17H30V18H29zM31,17H32V18H31zM32,17H33V18H32zM34,17H35V18H34zM2,18H3V19H2zM6,18H7V19H6zM8,18H9V19H8zM9,18H10V19H9zM10,18H11V19H10zM12,18H13V19H12zM14,18H15V19H14zM15,18H16V19H15zM19,18H20V19H19zM21,18H22V19H21zM22,18H23V19H22zM24,18H25V19H24zM27,18H28V19H27zM29,18H30V19H29zM30,18H31V19H30zM31,18H32V19H31zM34,18H35V19H34zM4,19H5V20H4zM5,19H6V20H5zM7,19H8V20H7zM11,19H12V20H11zM12,19H13V20H12zM13,19H14V20H13zM17,19H18V20H17zM18,19H19V20H18zM19,19H20V20H19zM20,19H21V20H20zM21,19H22V20H21zM22,19H23V20H22zM23,19H24V20H23zM25,19H26V20H25zM27,19H28V20H27zM28,19H29V20H28zM31,19H32V20H31zM32,19H33V20H32zM34,19H35V20H34zM7,20H8V21H7zM8,20H9V21H8zM10,20H11V21H10zM11,20H12V21H11zM17,20H18V21H17zM21,20H22V21H21zM22,20H23V21H22zM23,20H24V21H23zM24,20H25V21H24zM25,20H26V21H25zM29,20H30V21H29zM31,20H32V21H31zM32,20H33V21H32zM34,20H35V21H34zM2,21H3V22H2zM3,21H4V22H3zM6,21H7V22H6zM9,21H10V22H9zM11,21H12V22H11zM12,21H13V22H12zM13,21H14V22H13zM15,21H16V22H15zM18,21H19V22H18zM19,21H20V22H19zM20,21H21V22H20zM21,21H22V22H21zM24,21H25V22H24zM25,21H26V22H25zM26,21H27V22H26zM27,21H28V22H27zM30,21H31V22H30zM31,21H32V22H31zM32,21H33V22H32zM33,21H34V22H33zM34,21H35V22H34zM5,22H6V23H5zM7,22H8V23H7zM8,22H9V23H8zM9,22H10V23H9zM12,22H13V23H12zM14,22H15V23H14zM15,22H16V23H15zM17,22H18V23H17zM18,22H19V23H18zM21,22H22V23H21zM24,22H25V23H24zM25,22H26V23H25zM27,22H28V23H27zM29,22H30V23H29zM30,22H31V23H30zM31,22H32V23H31zM33,22H34V23H33zM34,22H35V23H34zM2,23H3V24H2zM5,23H6V24H5zM6,23H7V24H6zM9,23H10V24H9zM10,23H11V24H10zM11,23H12V24H11zM14,23H15V24H14zM15,23H16V24H15zM16,23H17V24H16zM18,23H19V24H18zM19,23H20V24H19zM20,23H21V24H20zM22,23H23V24H22zM23,23H24V24H23zM24,23H25V24H24zM25,23H26V24H25zM29,23H30V24H29zM30,23H31V24H30zM31,23H32V24H31zM32,23H33V24H32zM2,24H3V25H2zM7,24H8V25H7zM8,24H9V25H8zM10,24H11V25H10zM13,24H14V25H13zM15,24H16V25H15zM16,24H17V25H16zM17,24H18V25H17zM18,24H19V25H18zM20,24H21V25H20zM22,24H23V25H22zM27,24H28V25H27zM30,24H31V25H30zM32,24H33V25H32zM33,24H34V25H33zM2,25H3V26H2zM6,25H7V26H6zM7,25H8V26H7zM10,25H11V26H10zM12,25H13V26H12zM13,25H14V26H13zM14,25H15V26H14zM15,25H16V26H15zM16,25H17V26H16zM21,25H22V26H21zM22,25H23V26H22zM26,25H27V26H26zM29,25H30V26H29zM30,25H31V26H30zM31,25H32V26H31zM32,25H33V26H32zM34,25H35V26H34zM2,26H3V27H2zM3,26H4V27H3zM4,26H5V27H4zM6,26H7V27H6zM7,26H8V27H7zM8,26H9V27H8zM14,26H15V27H14zM15,26H16V27H15zM16,26H17V27H16zM17,26H18V27H17zM24,26H25V27H24zM25,26H26V27H25zM26,26H27V27H26zM27,26H28V27H27zM28,26H29V27H28zM29,26H30V27H29zM30,26H31V27H30zM31,26H32V27H31zM33,26H34V27H33zM34,26H35V27H34zM10,27H11V28H10zM12,27H13V28H12zM13,27H14V28H13zM14,27H15V28H14zM16,27H17V28H16zM17,27H18V28H17zM18,27H19V28H18zM21,27H22V28H21zM22,27H23V28H22zM23,27H24V28H23zM26,27H27V28H26zM30,27H31V28H30zM32,27H33V28H32zM34,27H35V28H34zM2,28H3V29H2zM3,28H4V29H3zM4,28H5V29H4zM5,28H6V29H5zM6,28H7V29H6zM7,28H8V29H7zM8,28H9V29H8zM13,28H14V29H13zM14,28H15V29H14zM15,28H16V29H15zM17,28H18V29H17zM20,28H21V29H20zM22,28H23V29H22zM24,28H25V29H24zM25,28H26V29H25zM26,28H27V29H26zM28,28H29V29H28zM30,28H31V29H30zM32,28H33V29H32zM2,29H3V30H2zM8,29H9V30H8zM11,29H12V30H11zM12,29H13V30H12zM14,29H15V30H14zM16,29H17V30H16zM18,29H19V30H18zM21,29H22V30H21zM22,29H23V30H22zM24,29H25V30H24zM25,29H26V30H25zM26,29H27V30H26zM30,29H31V30H30zM31,29H32V30H31zM32,29H33V30H32zM33,29H34V30H33zM2,30H3V31H2zM4,30H5V31H4zM5,30H6V31H5zM6,30H7V31H6zM8,30H9V31H8zM11,30H12V31H11zM13,30H14V31H13zM14,30H15V31H14zM16,30H17V31H16zM20,30H21V31H20zM24,30H25V31H24zM26,30H27V31H26zM27,30H28V31H27zM28,30H29V31H28zM29,30H30V31H29zM30,30H31V31H30zM31,30H32V31H31zM33,30H34V31H33zM34,30H35V31H34zM2,31H3V32H2zM4,31H5V32H4zM5,31H6V32H5zM6,31H7V32H6zM8,31H9V32H8zM12,31H13V32H12zM13,31H14V32H13zM14,31H15V32H14zM18,31H19V32H18zM21,31H22V32H21zM23,31H24V32H23zM25,31H26V32H25zM26,31H27V32H26zM27,31H28V32H27zM29,31H30V32H29zM30,31H31V32H30zM33,31H34V32H33zM34,31H35V32H34zM2,32H3V33H2zM4,32H5V33H4zM5,32H6V33H5zM6,32H7V33H6zM8,32H9V33H8zM12,32H13V33H12zM14,32H15V33H14zM15,32H16V33H15zM16,32H17V33H16zM18,32H19V33H18zM19,32H20V33H19zM21,32H22V33H21zM23,32H24V33H23zM25,32H26V33H25zM27,32H28V33H27zM29,32H30V33H29zM30,32H31V33H30zM32,32H33V33H32zM33,32H34V33H33zM34,32H35V33H34zM2,33H3V34H2zM8,33H9V34H8zM11,33H12V34H11zM14,33H15V34H14zM16,33H17V34H16zM17,33H18V34H17zM18,33H19V34H18zM20,33H21V34H20zM21,33H22V34H21zM22,33H23V34H22zM24,33H25V34H24zM27,33H28V34H27zM28,33H29V34H28zM29,33H30V34H29zM30,33H31V34H30zM31,33H32V34H31zM32,33H33V34H32zM2,34H3V35H2zM3,34H4V35H3zM4,34H5V35H4zM5,34H6V35H5zM6,34H7V35H6zM7,34H8V35H7zM8,34H9V35H8zM10,34H11V35H10zM11,34H12V35H11zM12,34H13V35H12zM13,34H14V35H13zM14,34H15V35H14zM15,34H16V35H15zM16,34H17V35H16zM19,34H20V35H19zM24,34H25V35H24zM25,34H26V35H25zM26,34H27V35H26zM27,34H28V35H27zM29,34H30V35H29zM33,34H34V35H33z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none"/></svg>`;
 
 const $ = s => document.querySelector(s);
 const app = $('#app');
-const ic = (id, cls='i') => `<svg class="${cls}"><use href="#i-${id}"/></svg>`;
+const ic = (id, cls='i') => `<svg class="${cls}" viewBox="0 0 24 24"><use href="#i-${id}"/></svg>`;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function load(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } }
 function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){} }
 const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a };
 const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms) }catch(e){} };
+const kc = n => n.toLocaleString('cs-CZ') + ' Kč';
 
-let state = load('sp-state', {nick:'', scores:{}});
+/* stav: přezdívka, body a uložené odpovědi, aby šlo stránku obnovit a vrátit se k hotovému úkolu */
+let state = load('sp-state', {});
+state = Object.assign({nick:'', scores:{}, saved:{}, stamps:{}}, state);
+const persist = () => save('sp-state', state);
 const total = () => Object.values(state.scores).reduce((a,b)=>a+b,0);
-function setScore(task, pts){
+const isDone = id => state.scores[id] != null;
+function setScore(task, pts, stamp){
   const before = total();
-  state.scores[task] = Math.max(state.scores[task]||0, pts); save('sp-state', state);
+  state.scores[task] = pts; state.stamps[task] = stamp; persist();
   countUp(before, total());
   const board = load('sp-board', {}); board[state.nick] = total(); save('sp-board', board);
-  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nick:state.nick, task, points:state.scores[task]})}).catch(()=>{});
+  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts})}).catch(()=>{});
 }
-function updPts(){ $('#pts').textContent = total() + ' b' }
+function updPts(){ $('#pts').textContent = total() + ' b' }
 function countUp(a, b){
   const el = $('#pts'), t0 = performance.now(), d = 700;
-  const step = t => { const k = Math.min(1,(t-t0)/d), e = 1-Math.pow(1-k,3); el.textContent = Math.round(a+(b-a)*e)+' b'; if(k<1) requestAnimationFrame(step) };
+  const step = t => { const k = Math.min(1,(t-t0)/d), e = 1-Math.pow(1-k,3); el.textContent = Math.round(a+(b-a)*e)+' b'; if(k<1) requestAnimationFrame(step) };
   requestAnimationFrame(step);
 }
+/* razítko podle výsledku, ne podle samotných bodů */
+const STAMPS = {ok:'SCHVÁLENO', mid:'SKORO', low:'ODEVZDÁNO'};
+const stampFor = ratio => ratio >= .8 ? 'ok' : ratio >= .5 ? 'mid' : 'low';
 
 /* Kelímek Bataronu (zatím SVG, později 3D render z Higgsfieldu) */
 function cup(h=90, flavor='#D22A88'){
-  const w = Math.round(h*0.8);
+  const w = Math.round(h*0.8), gid = 'g'+h+flavor.slice(1);
   return `<svg width="${w}" height="${h}" viewBox="0 0 80 100" aria-hidden="true">
-    <defs><linearGradient id="g${h}${flavor.slice(1)}" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".18"/><stop offset=".45" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient></defs>
+    <defs><linearGradient id="${gid}" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".18"/><stop offset=".45" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient></defs>
     <rect x="4" y="6" width="72" height="10" rx="3" fill="#E8E4E1"/>
     <path d="M8 16 H72 L64 96 H16 Z" fill="${flavor}"/>
     <path d="M12 38 H68 L66.4 58 H13.6 Z" fill="#fff"/>
     <text x="40" y="52" text-anchor="middle" font-family="League Spartan,Trebuchet MS,sans-serif" font-size="11" font-weight="900" fill="#16323F">BATARON</text>
     <circle cx="40" cy="77" r="8" fill="#30E3CA"/>
-    <path d="M8 16 H72 L64 96 H16 Z" fill="url(#g${h}${flavor.slice(1)})"/></svg>`;
+    <path d="M8 16 H72 L64 96 H16 Z" fill="url(#${gid})"/></svg>`;
 }
 
 const TASKS = [
@@ -263,34 +311,38 @@ const TASKS = [
 
 /* ---------- Domů ---------- */
 function home(){
-  const done = TASKS.filter(t=>state.scores[t.id]!=null).length;
+  const done = TASKS.filter(t=>isDone(t.id)).length, all = done === TASKS.length;
+  const pending = TASKS.find(t=>t.id===location.hash.slice(1));
   app.innerHTML = `
   <div class="docbar"><span>Zakázky na dnes</span><span>28. 11. 2026</span></div>
-  <section class="client">
+  ${all ? `<section class="result"><span class="bigstamp">HOTOVO</span><span class="big">${total()} b</span>
+      <p>Všech 5 zakázek pro Bataron je odevzdaných. Mrkni, jak jsi na tom v žebříčku.</p>
+      <button class="btn full" data-go="zebricek">Ukaž žebříček</button></section>`
+  : `<section class="client">
     <div class="k"><small>Klient: Bataron, batátové nudle</small>
-      <h1>Klient čeká na 5 výstupů</h1>
+      <h1>Klient čeká na ${5-done === 5 ? '5 výstupů' : (5-done)+(5-done===1?' výstup':' výstupy')}</h1>
       <p class="lead">Dnes děláš v marketingové agentuře. Každý hotový úkol ti dá razítko v aplikaci Options a body do našeho žebříčku.</p></div>
     <div class="hero-cup" id="herocup">${cup(140)}</div>
-    <div class="progress" style="grid-column:1/-1">${TASKS.map((t,i)=>`<i class="${i<done?'on':''}"></i>`).join('')}</div>
-  </section>
-  ${state.nick ? `<p class="lead">Pracuješ jako <b>${esc(state.nick)}</b>. Pořadí zakázek je na tobě.</p>` : nickForm()}
+    <div class="progress" style="grid-column:1/-1" aria-label="Hotovo ${done} z 5">${TASKS.map(t=>`<i class="${isDone(t.id)?'on':''}"></i>`).join('')}</div>
+  </section>`}
+  ${state.nick ? `<p class="lead">Pracuješ jako <b>${esc(state.nick)}</b>. Pořadí zakázek je na tobě.</p>` : nickForm(pending)}
   <div class="jobs">${TASKS.map(t=>{
-    const s = state.scores[t.id];
+    const s = state.scores[t.id], st = state.stamps[t.id] || 'ok';
     return `<button class="job press ${s!=null?'done':''}" data-go="${t.id}" ${state.nick?'':'disabled'}>
       <span class="ic">${ic(t.ic)}</span>
       <span class="t"><b>${t.name}</b><small>${t.role} · ${t.time}</small></span>
-      ${s!=null?`<span class="stamp">${s} b</span>`:`<span class="go">Začít</span>`}</button>`}).join('')}</div>
+      ${s!=null?`<span class="stamp ${st}">${s} b</span>`:`<span class="go">Začít</span>`}</button>`}).join('')}</div>
   <button class="btn dark full" data-go="zebricek">Žebříček dne</button>`;
   bindNick(); tilt($('#herocup'));
 }
-function nickForm(){
-  return `<form class="nick" id="nickf"><label for="nick">Jak ti máme říkat?</label>
-  <div class="row"><input id="nick" maxlength="18" autocomplete="off" placeholder="Přezdívka do žebříčku" required><button class="btn">Jdu na to</button></div>
-  <span class="hint">Stačí přezdívka, žádné jméno ani e-mail.</span></form>`;
+function nickForm(pending){
+  return `<form class="nick" id="nickf">${pending?`<span class="hint">Jdeš na úkol <b>${pending.name}</b>. Nejdřív se představ.</span>`:''}<label for="nick">Jak ti máme říkat?</label>
+  <div class="row"><input id="nick" maxlength="18" autocomplete="off" placeholder="Přezdívka" required><button class="btn">Jdu na to</button></div>
+  <span class="hint">Stačí přezdívka do žebříčku, žádné jméno ani e-mail. Úkoly se odemknou hned potom.</span></form>`;
 }
 function bindNick(){
   const f = $('#nickf'); if(!f) return;
-  f.addEventListener('submit', e=>{ e.preventDefault(); const v = $('#nick').value.trim(); if(!v) return; state.nick = v; save('sp-state', state); route(); });
+  f.addEventListener('submit', e=>{ e.preventDefault(); const v = $('#nick').value.trim(); if(!v) return; state.nick = v; persist(); route(); });
 }
 /* Kelímek se naklání podle prstu nebo náklonu telefonu */
 function tilt(el){
@@ -304,20 +356,24 @@ function tilt(el){
   if(window.DeviceOrientationEvent && !DeviceOrientationEvent.requestPermission) addEventListener('deviceorientation', onOri);
 }
 function header(t, n){ return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role}</span><span>Zakázka ${n} z 5</span></div>` }
-function finish(task, pts, max, text){
-  setScore(task, pts); buzz([20,40,30]);
-  return `<div class="result"><span class="bigstamp">${pts >= max/2 ? 'SCHVÁLENO' : 'ODEVZDÁNO'}</span><span class="big">${pts} / ${max} b</span><p>${text}</p>
+/* výsledkový box; fresh = právě dokončeno (připíše body a zavibruje), jinak jen zobrazí uložený výsledek */
+function result(task, pts, stamp, text, fresh){
+  if(fresh){ setScore(task, pts, stamp); buzz(stamp==='ok'?[20,40,30]:30) }
+  return `<div class="result" id="res"><span class="bigstamp ${stamp}">${STAMPS[stamp]}</span><span class="big">${pts} / 100 b</span><p>${text}</p>
   <p>Razítko si vyzvedni v aplikaci Options.</p>
   <button class="btn full" data-go="">Další zakázka</button></div>`;
 }
+const toRes = () => { const r = $('#res'); if(r) r.scrollIntoView({behavior:'smooth', block:'center'}) };
 
 /* ---------- 1 Story ---------- */
 const HOOKS = ['Večeře za 3 minuty, která není z mikrovlnky','Tohle jsem od instantních nudlí nečekal','Učení do noci? Tohle je můj plán B','POV: máš hlad a za 5 minut hraješ ranked','Batátové nudle. Jo, z batátů.','Řekni mi, že jsi to už zkusil. Ne? Tak koukej.'];
 const STORY_CHECKS = ['Hook: první věta nebo text diváka zastaví do 2 sekund','Kelímek Bataronu je v záběru jasně vidět','Řekneš nebo napíšeš, proč to zkusit','Označíš @options a @shortpro'];
-let hookI = 0, storyOn = [];
+let hookI = 0;
 function story(){
-  const t = TASKS[0];
+  const t = TASKS[0], sv = state.saved.story || {on:[]}, done = isDone('story');
+  const storyText = 'Přesně tohle dělá každý den náš kreativní tým: hook, produkt, důvod ke koupi a označení. Body máš i za odškrtnutý seznam.';
   app.innerHTML = `${header(t,1)}<h2>Natoč Story, které zastaví palec</h2>
+  ${done ? result('story', state.scores.story, state.stamps.story||'ok', storyText) : ''}
   <p class="lead">Jsi tvůrce obsahu pro Bataron. Vezmi si kelímek ze stolu a natoč Story do 15 sekund. Stačí jeden záběr nebo tři krátké.</p>
   <div class="phone"><div class="bars"><i></i><i></i><i></i></div>
     <div class="hook" id="hook">${HOOKS[hookI]}</div>
@@ -325,20 +381,21 @@ function story(){
     <div class="tags"><span>@options</span><span>@shortpro</span></div></div>
   <button class="btn ghost full" id="nexthook" style="display:flex;gap:8px;justify-content:center;align-items:center">${ic('dice')} Jiný nápad na hook</button>
   <h3>Kontrolní seznam</h3>
-  <div class="checks">${STORY_CHECKS.map((c,i)=>`<button class="check press ${storyOn[i]?'on':''}" data-chk="${i}"><span class="box">${ic('check','')}</span><span>${c}</span></button>`).join('')}</div>
+  <div class="checks">${STORY_CHECKS.map((c,i)=>`<button class="check press ${sv.on[i]?'on':''}" data-chk="${i}" ${done?'disabled':''}><span class="box">${ic('check','')}</span><span>${c}</span></button>`).join('')}</div>
   <p class="hint">Nemáš Instagram nebo nechceš nic zveřejňovat? Natoč video jen do mobilu a ukaž ho. Počítá se to taky.</p>
-  <h3>Ukaž Story dobrovolníkovi</h3>
-  <form class="pin" id="pinf"><input id="pin" inputmode="numeric" maxlength="4" placeholder="••••" aria-label="Kód dobrovolníka"><button class="btn">Potvrdit</button></form>
-  <span class="hint">Kód zadá dobrovolník, až tvoje Story uvidí.</span><span class="err" id="pinerr"></span><div id="sres"></div>`;
+  <div id="pinwrap" class="screen" ${done?'hidden':''}>
+    <h3>Ukaž Story dobrovolníkovi</h3>
+    <form class="pin" id="pinf"><input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="Kód dobrovolníka"><button class="btn">Potvrdit</button></form>
+    <span class="hint">Kód zadá dobrovolník, až tvoje Story uvidí.</span><span class="err" id="pinerr"></span></div>
+  <div id="sres"></div>`;
   tilt($('#storycup'));
   $('#nexthook').onclick = ()=>{ hookI=(hookI+1)%HOOKS.length; const h=$('#hook'); h.style.transform='scale(.94)'; setTimeout(()=>{ h.textContent = HOOKS[hookI]; h.style.transform='' },120) };
-  app.querySelectorAll('[data-chk]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.chk; storyOn[i]=!storyOn[i]; b.classList.toggle('on'); buzz(10) });
-  $('#pinf').addEventListener('submit', e=>{ e.preventDefault();
-    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá dobrovolník.'; return }
-    const pts = 60 + storyOn.filter(Boolean).length*10;
-    $('#pinf').hidden = true; $('#pinerr').textContent='';
-    $('#sres').innerHTML = finish('story', pts, 100, 'Přesně tohle dělá každý den náš kreativní tým: hook, produkt, důvod ke koupi a označení. Body máš i za odškrtnutý seznam.');
-    $('#sres').scrollIntoView({behavior:'smooth'});
+  app.querySelectorAll('[data-chk]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.chk; sv.on[i]=!sv.on[i]; state.saved.story=sv; persist(); b.classList.toggle('on'); buzz(10) });
+  const f = $('#pinf'); if(f) f.addEventListener('submit', e=>{ e.preventDefault();
+    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá dobrovolník.'; buzz([30,40,30]); return }
+    const pts = 60 + sv.on.filter(Boolean).length*10;
+    $('#pinwrap').hidden = true;
+    $('#sres').innerHTML = result('story', pts, 'ok', storyText, true); toRes();
   });
 }
 
@@ -347,23 +404,23 @@ const box = (c,w=26,h=34) => `<svg width="${w}" height="${h}" viewBox="0 0 26 34
 const drink = `<svg width="46" height="70" viewBox="0 0 46 70" aria-hidden="true"><path d="M27 2l-4 14" stroke="#16323F" stroke-width="3" stroke-linecap="round"/><path d="M6 16h34l-5 52H11z" fill="#30E3CA"/><path d="M8 28h30" stroke="#fff" stroke-width="3" opacity=".7"/></svg>`;
 const stars = n => `<span class="stars">${Array.from({length:5},(_,i)=>`<svg viewBox="0 0 24 24" style="opacity:${i<n?1:.3}"><use href="#i-star"/></svg>`).join('')}</span>`;
 const TRICKS = [
-  {scene:()=>`<div class="cups">${[['Malý',62,'39 Kč'],['Střední',80,'59 Kč'],['Velký',98,'65 Kč']].map(c=>`<div class="cupbox">${cup(c[1])}<span>${c[0]}</span><span class="price">${c[2]}</span></div>`).join('')}</div>`,
-   q:'Proč obchod nabízí střední kelímek jen o 6 Kč levněji než velký?',
+  {scene:()=>`<div class="cups">${[['Malý',62,'39 Kč'],['Střední',80,'59 Kč'],['Velký',98,'65 Kč']].map(c=>`<div class="cupbox">${cup(c[1])}<span>${c[0]}</span><span class="price">${c[2]}</span></div>`).join('')}</div>`,
+   q:'Proč obchod nabízí střední kelímek jen o 6 Kč levněji než velký?',
    o:['Ve trojici to na regálu vypadá hezky.','Střední je návnada: vedle něj vypadá velký jako jasná výhoda, takže lidé koupí velký.','Zákazníci chtějí co nejvíc možností.'], a:1,
    e:['Efekt návnady','Střední kelímek se skoro nekupuje. Je tam proto, aby velký vypadal výhodně. Stejný trik uvidíš u popcornu v kině nebo u předplatného.']},
-  {scene:()=>`<div class="cupbox">${cup(98)}<span class="price"><s>89 Kč</s>49 Kč</span><span class="tag hot">AKCE</span></div>`,
+  {scene:()=>`<div class="cupbox">${cup(98)}<span class="price"><s>89 Kč</s>49 Kč</span><span class="tag hot">AKCE</span></div>`,
    q:'Proč je na cenovce vidět i přeškrtnutá vyšší cena?',
-   o:['Obchod se spletl a nestihl cenovku vyměnit.','Přikazuje to zákon u každého zboží.','První číslo se uloží do hlavy jako kotva, takže 49 Kč pak působí levně.'], a:2,
+   o:['Obchod se spletl a nestihl cenovku vyměnit.','Přikazuje to zákon u každého zboží.','První číslo se uloží do hlavy jako kotva, takže 49 Kč pak působí levně.'], a:2,
    e:['Kotva','Mozek porovnává s prvním číslem, které uvidí. Proto e-shopy ukazují původní cenu, i když se za ni skoro nikdy neprodávalo.']},
   {scene:()=>`<div class="cupbox">${cup(98,'#16323F')}<span class="tag">Limitovaná příchuť Mango Chili</span><span class="tag hot">Zbývá 12 kusů</span></div>`,
    q:'Co dělá nápis „Zbývá 12 kusů“?',
    o:['Využívá vzácnost: když něčeho ubývá, chceme to víc a rozhodujeme se rychleji.','Pomáhá skladníkovi s inventurou.','Upozorňuje, že produkt brzy projde.'], a:0,
    e:['Vzácnost a FOMO','Strach, že o něco přijdeme, nás žene k rychlému nákupu. Používá se u dropů tenisek, vstupenek i limitovaných příchutí.']},
-  {scene:()=>`<div class="cups"><div class="cupbox">${cup(80)}<span class="price">50 Kč</span></div><div class="cupbox">${cup(80)}<span class="price">49,90 Kč</span></div></div>`,
-   q:'Proč obchody píšou 49,90 Kč místo 50 Kč?',
+  {scene:()=>`<div class="cups"><div class="cupbox">${cup(80)}<span class="price">50 Kč</span></div><div class="cupbox">${cup(80)}<span class="price">49,90 Kč</span></div></div>`,
+   q:'Proč obchody píšou 49,90 Kč místo 50 Kč?',
    o:['Kvůli vracení drobných.','Mozek čte zleva: první číslice je 4, takže cena působí o hodně nižší než 50.','Je to levnější na výrobu cenovky.'], a:1,
    e:['Efekt levé číslice','Rozdíl je 10 haléřů, ale 49 vypadá jako jiná kategorie než 50. Proto téměř žádná cena nekončí nulou.']},
-  {scene:()=>`<div class="cupbox">${cup(90)}${stars(5)}<b>4,8 z 5</b><span><b>12 000 lidí</b> už ochutnalo</span></div>`,
+  {scene:()=>`<div class="cupbox">${cup(90)}${stars(5)}<b>4,8 z 5</b><span><b>12 000 lidí</b> už ochutnalo</span></div>`,
    q:'Proč je na reklamě hodnocení a počet lidí, kteří produkt zkusili?',
    o:['Aby reklama nebyla prázdná.','Kvůli kontrole kvality.','Když něco zkusilo hodně lidí, věříme, že je to dobré. Říká se tomu sociální důkaz.'], a:2,
    e:['Sociální důkaz','Řídíme se podle ostatních. Recenze, počet zhlédnutí a fronta před bistrem fungují stejně.']},
@@ -371,33 +428,38 @@ const TRICKS = [
    q:'Výrobce platí obchodu navíc, aby byl Bataron v úrovni očí. Proč?',
    o:['V úrovni očí se prodává nejvíc. Je to zlatá zóna regálu.','Dole by se nudle rozmačkaly.','Nahoře je regál nejdražší.'], a:0,
    e:['Zlatá zóna regálu','Kupujeme hlavně to, co vidíme bez ohýbání. Dražší značky si proto kupují místo v očích, dětské sladkosti bývají v úrovni očí dětí.']},
-  {scene:()=>`<div class="cups"><div class="cupbox">${cup(70)}<span class="price">49 Kč</span></div><span class="price">+</span><div class="cupbox">${drink}<span class="price">35 Kč</span></div><span class="price">=</span><div class="cupbox"><span class="tag hot">KOMBO</span><span class="price"><s>84 Kč</s>69 Kč</span></div></div>`,
+  {scene:()=>`<div class="cups"><div class="cupbox">${cup(70)}<span class="price">49 Kč</span></div><span class="price">+</span><div class="cupbox">${drink}<span class="price">35 Kč</span></div><span class="price">=</span><div class="cupbox"><span class="tag hot">KOMBO</span><span class="price"><s>84 Kč</s>69 Kč</span></div></div>`,
    q:'Proč se vyplatí prodávat nudle s pitím jako kombo?',
    o:['Pití se jinak neprodá.','Zákazník ušetří, ale utratí víc, než chtěl. Obchodu roste průměrný nákup.','Je to pohodlnější pro pokladní.'], a:1,
-   e:['Balíček','Přišel sis pro nudle za 49 Kč a odcházíš s nákupem za 69 Kč a dobrým pocitem. Tak fungují menu v každém fast foodu.']},
+   e:['Balíček','Přijdeš si pro nudle za 49 Kč a odcházíš s nákupem za 69 Kč a dobrým pocitem. Tak fungují menu v každém fast foodu.']},
 ];
-let tq = 0, tAns = [];
 function triky(){
-  const t = TASKS[1];
-  if(tq >= TRICKS.length){
-    const ok = tAns.filter(Boolean).length; const pts = Math.round(ok/TRICKS.length*100);
-    app.innerHTML = `${header(t,2)}<h2>Teď víš, jak tě obchody ovlivňují</h2>` + finish('triky', pts, 100, `Správně ${ok} ze ${TRICKS.length}. Až půjdeš příště nakupovat, zkus najít aspoň tři z těchhle triků.`);
+  const t = TASKS[1], sv = state.saved.triky || (state.saved.triky = {q:0, ans:[]});
+  const ok = sv.ans.filter(Boolean).length;
+  if(sv.q >= TRICKS.length){
+    const pts = Math.round(ok/TRICKS.length*100), fresh = !isDone('triky');
+    app.innerHTML = `${header(t,2)}<h2>Teď víš, jak tě obchody ovlivňují</h2>` +
+      result('triky', fresh?pts:state.scores.triky, fresh?stampFor(ok/TRICKS.length):state.stamps.triky, `Máš správně ${ok} ze ${TRICKS.length}. Až půjdeš příště nakupovat, zkus najít aspoň tři z těchhle triků.`, fresh) +
+      `<div class="recap">${TRICKS.map((T,i)=>`<p class="fb ${sv.ans[i]?'y':'n'}">${ic(sv.ans[i]?'check':'x','')}<span><b>${T.e[0]}.</b> ${T.q}</span></p>`).join('')}</div>`;
     return;
   }
-  const T = TRICKS[tq];
-  const order = shuffle(T.o.map((x,i)=>i));
+  const T = TRICKS[sv.q];
+  const order = shuffle(T.o.map((x,i)=>i)), letter = i => 'ABC'[order.indexOf(i)];
   app.innerHTML = `${header(t,2)}
-  <div class="qprog">${TRICKS.map((x,i)=>`<i class="${i<tq?(tAns[i]?'ok':'bad'):i===tq?'cur':''}"></i>`).join('')}</div>
+  <div class="qprog" aria-label="Otázka ${sv.q+1} ze ${TRICKS.length}">${TRICKS.map((x,i)=>`<i class="${i<sv.q?(sv.ans[i]?'ok':'bad'):i===sv.q?'cur':''}"></i>`).join('')}</div>
   <div class="scene">${T.scene()}</div>
   <h2>${T.q}</h2>
-  <div class="opts">${order.map((i,k)=>`<button class="opt press" data-o="${i}"><b>${'ABC'[k]}</b><span>${T.o[i]}</span></button>`).join('')}</div>
+  <div class="opts">${order.map((i,k)=>`<button class="opt press" data-o="${i}"><b>${'ABC'[k]}</b><span>${T.o[i]}</span><span class="mark"></span></button>`).join('')}</div>
   <div id="ex"></div>`;
+  let answered = false;
   app.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{
-    if(tAns.length > tq) return;
-    const i = +b.dataset.o, ok = i===T.a; tAns[tq] = ok; buzz(ok?20:[30,40,30]);
-    app.querySelectorAll('[data-o]').forEach(x=>{ const j=+x.dataset.o; if(j===T.a) x.classList.add('ok'); else if(x===b) x.classList.add('bad'); x.disabled=true });
-    $('#ex').innerHTML = `<div class="explain"><strong>${ok?'Správně. ':''}${T.e[0]}</strong>${T.e[1]}</div><br><button class="btn full" id="nq">${tq+1<TRICKS.length?'Další':'Vyhodnotit'}</button>`;
-    $('#nq').onclick = ()=>{ tq++; triky(); };
+    if(answered) return; answered = true;
+    const i = +b.dataset.o, good = i===T.a; sv.ans[sv.q] = good; persist(); buzz(good?20:[30,40,30]);
+    app.querySelectorAll('[data-o]').forEach(x=>{ const j=+x.dataset.o; x.disabled=true;
+      if(j===T.a){ x.classList.add('ok'); x.querySelector('.mark').innerHTML = ic('check','') }
+      else if(x===b){ x.classList.add('bad'); x.querySelector('.mark').innerHTML = ic('x','') } });
+    $('#ex').innerHTML = `<div class="explain ${good?'y':'n'}"><strong>${good?'Správně.':`Špatně. Správně je ${letter(T.a)}.`} ${T.e[0]}</strong>${T.e[1]}</div><br><button class="btn full" id="nq">${sv.q+1<TRICKS.length?'Další otázka':'Vyhodnotit'}</button>`;
+    $('#nq').onclick = ()=>{ sv.q++; persist(); triky(); window.scrollTo(0,0) };
     $('#ex').scrollIntoView({behavior:'smooth', block:'nearest'});
   });
 }
@@ -405,44 +467,46 @@ function triky(){
 /* ---------- 3 Influenceři ---------- */
 const BUDGET = 30000;
 const INF = [
-  {h:'gamer_tom', name:'Tomáš | Tom plays', ini:'TP', c:'#2B4C7E', posts:412, fol:'85 tis.', fing:310, bio:'Streamuju každý večer od 20:00. Valorant, LoL, noční maratony.', icons:['pad','play','pot','pad','play','star','pad','pot','play'], hue:215, aud:'16 až 24 let, 92 % Česko', er:'6,1 %', price:15000, ok:true,
+  {h:'gamer_tom', name:'Tomáš | Tom plays', ini:'TP', c:'#2B4C7E', posts:412, fol:'85 tis.', fing:310, bio:'Streamuju každý večer od 20:00. Valorant, LoL, noční maratony.', icons:['pad','play','pot','pad','play','star'], hue:215, aud:'16 až 24 let, 92 % Česko', er:'6,1 %', price:15000, topic:'hry, streamy', ok:true,
    why:'Sedí přesně: mladí hráči, kteří jedí v noci rychlé jídlo. Výborný engagement.'},
-  {h:'luxury.eva', name:'Eva | Travel & Luxury', ini:'EV', c:'#A88A3D', posts:1890, fol:'400 tis.', fing:1200, bio:'Dubaj, Monako, Bali. Spolupráce jen přes management.', icons:['plane','star','heart','plane','star','plane','heart','star','plane'], hue:40, aud:'30 až 45 let, půlka mimo Česko', er:'0,8 %', price:60000, ok:false,
+  {h:'luxury.eva', name:'Eva | Travel & Luxury', ini:'EV', c:'#A88A3D', posts:1890, fol:'400 tis.', fing:1200, bio:'Dubaj, Monako, Bali. Spolupráce jen přes management.', icons:['plane','star','heart','plane','star','plane'], hue:40, aud:'30 až 45 let, půlka mimo Česko', er:'0,8 %', price:60000, topic:'luxus, cestování', ok:false,
    why:'Je dvakrát dražší než celý rozpočet, publikum je starší a půlka mimo Česko. Instantní nudle k luxusu nesedí.'},
-  {h:'foodie.linh', name:'Linh | Asijská kuchyně', ini:'FL', c:'#D22A88', posts:268, fol:'40 tis.', fing:520, bio:'Vietnamka v Praze. Recepty do 15 minut a tipy na bistra.', icons:['pot','heart','pot','play','pot','star','heart','pot','play'], hue:330, aud:'18 až 30 let, 80 % Praha', er:'8,4 %', price:12000, ok:true,
+  {h:'foodie.linh', name:'Linh | Asijská kuchyně', ini:'FL', c:'#D22A88', posts:268, fol:'40 tis.', fing:520, bio:'Vietnamka v Praze. Recepty do 15 minut a tipy na bistra.', icons:['pot','heart','pot','play','pot','star'], hue:330, aud:'18 až 30 let, 80 % Praha', er:'8,4 %', price:12000, topic:'asijské jídlo', ok:true,
    why:'Asijské jídlo je přesně její téma a lidi jí věří. Menší účet, ale nejvyšší engagement.'},
-  {h:'fit_jakub', name:'Jakub | Fitness coach', ini:'FJ', c:'#0E8C7B', posts:950, fol:'120 tis.', fing:400, bio:'Žádný cukr, žádné instantní jídlo. Jen čistá strava a disciplína.', icons:['dumb','heart','dumb','star','dumb','play','heart','dumb','star'], hue:170, aud:'25 až 35 let, Česko', er:'3,0 %', price:20000, ok:false,
+  {h:'fit_jakub', name:'Jakub | Fitness coach', ini:'FJ', c:'#0E8C7B', posts:950, fol:'120 tis.', fing:400, bio:'Žádný cukr, žádné instantní jídlo. Jen čistá strava a disciplína.', icons:['dumb','heart','dumb','star','dumb','play'], hue:170, aud:'25 až 35 let, Česko', er:'3,0 %', price:20000, topic:'fitness, zdravá strava', ok:false,
    why:'V biu píše, že instantní jídlo nejí. Reklama by působila falešně a sledující by to poznali.'},
-  {h:'viral.kuba', name:'Kuba | Vtipná videa', ini:'VK', c:'#6A3FB5', posts:3100, fol:'250 tis.', fing:7400, bio:'Daily memes. Follow for follow!', icons:['laugh','play','laugh','laugh','star','play','laugh','play','laugh'], hue:265, aud:'60 % Indie a Brazílie', er:'0,3 %', price:10000, ok:false,
+  {h:'viral.kuba', name:'Kuba | Vtipná videa', ini:'VK', c:'#6A3FB5', posts:3100, fol:'250 tis.', fing:7400, bio:'Daily memes. Follow for follow!', icons:['laugh','play','laugh','laugh','star','play'], hue:265, aud:'60 % Indie a Brazílie', er:'0,3 %', price:10000, topic:'memy', ok:false,
    why:'Hodně sledujících, ale skoro nikdo nereaguje a většina je ze zahraničí. Vypadá to na koupené sledující.'},
 ];
-let pick = new Set(), infDone = false;
-const kc = n => n.toLocaleString('cs-CZ') + ' Kč';
 function influ(){
-  const t = TASKS[2]; const spent = [...pick].reduce((a,i)=>a+INF[i].price,0);
+  const t = TASKS[2], sv = state.saved.influ || (state.saved.influ = {pick:[]});
+  const pick = new Set(sv.pick), done = isDone('influ');
+  const spent = [...pick].reduce((a,i)=>a+INF[i].price,0);
+  const label = p => { const i = INF.indexOf(p), s = pick.has(i);
+    return p.ok ? (s ? ['y','Vybráno správně'] : ['n','Tohle ti chybí']) : (s ? ['n','Tohle jsi brát neměl(a)'] : ['y','Správně vynecháno']) };
+  const hits = INF.filter((p,i)=>p.ok && pick.has(i)).length, wrong = INF.filter((p,i)=>!p.ok && pick.has(i)).length;
+  const resText = `Správně jsou @gamer_tom a @foodie.linh za 27 000 Kč. Ty máš ${hits} ze 2 správných${wrong?` a ${wrong} navíc`:''}. Víc sledujících neznamená lepší výběr. Rozhoduje, kdo je sleduje a jestli reagují. Proč u každého profilu, najdeš níže.`;
   app.innerHTML = `${header(t,3)}<h2>Najdi influencery pro Bataron</h2>
-  <p class="lead">Cíl: aby Bataron poznali lidé 16 až 25 let v Česku, kteří studují nebo hrají do noci a chtějí rychlé jídlo. Vyber jeden nebo víc profilů a vejdi se do rozpočtu.</p>
+  ${done ? result('influ', state.scores.influ, state.stamps.influ, resText) : `<p class="lead">Cíl: aby Bataron poznali lidé 16 až 25 let v Česku, kteří studují nebo hrají do noci a chtějí rychlé jídlo. Vyber jeden nebo víc profilů a vejdi se do rozpočtu.</p>
   <div class="budget"><div class="nums"><span>Utraceno ${kc(spent)}</span><span>Rozpočet ${kc(BUDGET)}</span></div>
-  <div class="track"><div class="fill ${spent>BUDGET?'over':''}" style="width:${Math.min(100,spent/BUDGET*100)}%"></div></div></div>
-  ${INF.map((p,i)=>`<article class="ig ${pick.has(i)?'sel':''} ${infDone?(p.ok?'right':(pick.has(i)?'wrong':'')):''}">
+  <div class="track"><div class="fill ${spent>BUDGET?'over':''}" style="width:${Math.min(100,spent/BUDGET*100)}%"></div></div></div>`}
+  ${INF.map((p,i)=>{ const L = label(p); return `<article class="ig ${pick.has(i)?'sel':''} ${done?(L[0]==='y'?'right':'wrong'):''}">
+    ${done?`<p class="fb ${L[0]} flag">${ic(L[0]==='y'?'check':'x','')}<b>${L[1]}</b></p>`:''}
     <div class="top"><div class="ava"><div style="background:${p.c}">${p.ini}</div></div>
       <div><div class="handle">@${p.h}</div>
       <div class="stats"><span><b>${p.posts}</b>příspěvků</span><span><b>${p.fol}</b>sledujících</span><span><b>${p.fing}</b>sleduje</span></div></div></div>
     <div class="bio"><strong>${p.name}</strong>${p.bio}</div>
-    <div class="grid9">${p.icons.slice(0,6).map((g,k)=>`<div style="background:hsl(${p.hue+(k%3)*6} 42% ${30+k*6}%)">${ic(g,'')}</div>`).join('')}</div>
-    <div class="facts"><div><span>Publikum</span><b>${p.aud}</b></div><div><span>Engagement</span><b>${p.er}</b></div><div><span>Cena za Story</span><b>${kc(p.price)}</b></div><div><span>Sledující</span><b>${p.fol}</b></div></div>
-    ${infDone?`<p class="verdict ${p.ok?'y':'n'}">${ic(p.ok?'check':'x','')}<span>${p.why}</span></p>`:`<button class="pick press" data-p="${i}">${pick.has(i)?'Vybráno do kampaně':'Vybrat do kampaně'}</button>`}
-  </article>`).join('')}
-  <span class="err">${spent>BUDGET?'Jsi přes rozpočet. Někoho odeber.':''}</span>
-  <div id="ires">${infDone?'':`<button class="btn full" id="isub" ${!pick.size||spent>BUDGET?'disabled':''}>Navrhnout klientovi</button>`}</div>`;
-  app.querySelectorAll('.grid9 svg').forEach(s=>{ s.setAttribute('viewBox','0 0 24 24'); s.style.fill='none'; s.style.stroke='currentColor'; s.style.strokeWidth='2' });
-  app.querySelectorAll('.verdict svg').forEach(s=>{ s.setAttribute('viewBox','0 0 24 24'); s.style.fill='none'; s.style.strokeWidth='3' });
-  app.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.p; pick.has(i)?pick.delete(i):pick.add(i); buzz(10); const y=scrollY; influ(); scrollTo(0,y) });
+    <div class="grid9">${p.icons.map((g,k)=>`<div style="background:hsl(${p.hue+(k%3)*6} 42% ${30+k*6}%)">${ic(g,'')}</div>`).join('')}</div>
+    <div class="facts"><div><span>Publikum</span><b>${p.aud}</b></div><div><span>Engagement</span><b>${p.er}</b></div><div><span>Cena za Story</span><b>${kc(p.price)}</b></div><div><span>Témata</span><b>${p.topic}</b></div></div>
+    ${done?`<p class="verdict">${p.why}</p>`:`<button class="pick press" data-p="${i}">${pick.has(i)?'Vybráno do kampaně':'Vybrat do kampaně'}</button>`}
+  </article>`}).join('')}
+  ${done?'':`<span class="err" id="ierr">${spent>BUDGET?'Jsi přes rozpočet. Někoho odeber.':''}</span>
+  <button class="btn full" id="isub" ${!pick.size||spent>BUDGET?'disabled':''}>Navrhnout klientovi</button>`}`;
+  app.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.p; pick.has(i)?pick.delete(i):pick.add(i); sv.pick=[...pick]; persist(); buzz(10); const y=scrollY; influ(); scrollTo(0,y) });
   const s = $('#isub'); if(s) s.onclick = ()=>{
     let pts = 0; pick.forEach(i=>pts += INF[i].ok?50:-25); pts = Math.max(0,pts);
-    infDone = true; influ();
-    $('#ires').innerHTML = finish('influ', pts, 100, 'Správně jsou @gamer_tom a @foodie.linh za 27 000 Kč. Víc sledujících neznamená lepší výběr. Rozhoduje, kdo je sleduje a jestli reagují.');
-    $('#ires').scrollIntoView({behavior:'smooth'});
+    const stamp = stampFor(pts/100);
+    setScore('influ', pts, stamp); buzz(stamp==='ok'?[20,40,30]:30); influ(); window.scrollTo(0,0);
   };
 }
 
@@ -456,31 +520,34 @@ const ROLES = [
 const CAMPS = [
   {t:'Reklamní video na TikTok s herečkou', n:4, a:['kam','her','zvuk','str']},
   {t:'Plakát a leták do večerek', n:2, a:['gra','copy']},
-  {t:'Kampaň s influencery za 50 000 Kč, vyhodnocená podle prodejů', n:2, a:['inf','perf']},
+  {t:'Kampaň s influencery za 50 000 Kč, vyhodnocená podle prodejů', n:2, a:['inf','perf']},
 ];
-let team = CAMPS.map(()=>new Set()), teamDone = false;
 function tym(){
-  const t = TASKS[3];
+  const t = TASKS[3], sv = state.saved.tym || (state.saved.tym = {team:CAMPS.map(()=>[])});
+  const team = sv.team.map(a=>new Set(a)), done = isDone('tym');
+  const rn = id => ROLES.find(r=>r[0]===id)[1].toLowerCase();
+  const campOk = ci => CAMPS[ci].a.every(x=>team[ci].has(x)) && team[ci].size===CAMPS[ci].n;
+  const nOk = CAMPS.filter((c,ci)=>campOk(ci)).length;
+  let hit=0, all=0; CAMPS.forEach((c,i)=>{ all+=c.n; c.a.forEach(x=>{ if(team[i].has(x)) hit++ }) });
   app.innerHTML = `${header(t,4)}<h2>Jsi projektový manažer. Sestav týmy.</h2>
-  <p class="lead">Pro každou kampaň vyber lidi z agentury. Kolik jich potřebuješ, je napsané u kampaně. Ty jako projekťák jsi v každém týmu automaticky.</p>
+  ${done ? result('tym', state.scores.tym, state.stamps.tym, `Správně máš ${nOk} ze 3 kampaní a ${hit} z ${all} lidí. U každé kampaně níže vidíš, kdo chyběl a kdo byl navíc.`) :
+  `<p class="lead">Pro každou kampaň vyber lidi z agentury. Kolik jich potřebuješ, je napsané u kampaně. Ty jako projekťák jsi v každém týmu automaticky.</p>`}
   <details class="legend"><summary>Kdo co dělá</summary><br><div class="roles">${ROLES.map(r=>`<div class="role"><b>${r[1]}</b>${r[2]}</div>`).join('')}</div></details>
-  ${CAMPS.map((c,ci)=>{ const ok = teamDone && c.a.every(x=>team[ci].has(x)) && team[ci].size===c.n;
-    const rn = id => ROLES.find(r=>r[0]===id)[1].toLowerCase();
+  ${CAMPS.map((c,ci)=>{ const ok = campOk(ci);
     const miss = c.a.filter(x=>!team[ci].has(x)).map(rn), extra = [...team[ci]].filter(x=>!c.a.includes(x)).map(rn);
-    const fb = !teamDone ? '' : ok ? `<p class="fb y">${ic('check','')}<span><b>Správně.</b> Tenhle tým kampaň zvládne.</span></p>`
-      : `<p class="fb n">${ic('x','')}<span><b>Tady je chyba.</b>${miss.length?` Chyběl ti: ${miss.join(', ')}.`:''}${extra.length?` Navíc jsi vzal: ${extra.join(', ')}.`:''}</span></p>`;
-    return `<section class="camp ${teamDone?(ok?'right':'wrong'):''}"><h3>${c.t}</h3>${teamDone?fb:`<span class="need">Vyber ${c.n} · vybráno ${team[ci].size}</span>`}
+    const fb = !done ? '' : ok ? `<p class="fb y">${ic('check','')}<span><b>Správně.</b> Tenhle tým kampaň zvládne.</span></p>`
+      : `<p class="fb n">${ic('x','')}<span><b>Tady je chyba.</b>${miss.length?` Chybí: ${miss.join(', ')}.`:''}${extra.length?` Navíc máš: ${extra.join(', ')}.`:''}</span></p>`;
+    return `<section class="camp ${done?(ok?'right':'wrong'):''}"><h3>${c.t}</h3>${done?fb:`<span class="need" id="need${ci}">Vyber ${c.n} · vybráno ${team[ci].size}</span>`}
     <div class="chips">${ROLES.map(r=>{ const on=team[ci].has(r[0]); let cls = on?'on':'';
-      if(teamDone){ cls = c.a.includes(r[0]) ? (on?'ok':'miss') : (on?'bad':'') }
-      return `<button class="chip press ${cls}" data-c="${ci}" data-r="${r[0]}" ${teamDone?'disabled':''}>${r[1]}</button>`}).join('')}</div></section>`}).join('')}
-  <div id="tres">${teamDone?'':`<button class="btn full" id="tsub" ${team.every((s,i)=>s.size===CAMPS[i].n)?'':'disabled'}>Odeslat týmy</button>`}</div>`;
-  app.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ const s=team[+b.dataset.c], r=b.dataset.r, n=CAMPS[+b.dataset.c].n;
-    if(s.has(r)) s.delete(r); else if(s.size<n) s.add(r); buzz(10); const y=scrollY; tym(); scrollTo(0,y) });
+      if(done){ cls = c.a.includes(r[0]) ? (on?'ok':'miss') : (on?'bad':'') }
+      return `<button class="chip press ${cls}" data-c="${ci}" data-r="${r[0]}" ${done?'disabled':''}>${r[1]}</button>`}).join('')}</div></section>`}).join('')}
+  ${done?'':`<button class="btn full" id="tsub" ${team.every((s,i)=>s.size===CAMPS[i].n)?'':'disabled'}>Odeslat týmy</button>`}`;
+  app.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ const ci=+b.dataset.c, s=team[ci], r=b.dataset.r, n=CAMPS[ci].n;
+    if(s.has(r)) s.delete(r); else if(s.size<n) s.add(r); else { buzz([30,40,30]); const el=$('#need'+ci); el.textContent=`Tým je plný (${n}). Nejdřív někoho odeber.`; el.classList.add('warn'); return }
+    sv.team = team.map(x=>[...x]); persist(); buzz(10); const y=scrollY; tym(); scrollTo(0,y) });
   const s = $('#tsub'); if(s) s.onclick = ()=>{
-    let hit=0, all=0; CAMPS.forEach((c,i)=>{ all+=c.n; c.a.forEach(x=>{ if(team[i].has(x)) hit++ }) });
-    teamDone = true; tym();
-    $('#tres').innerHTML = finish('tym', Math.round(hit/all*100), 100, `Trefil jsi ${hit} z ${all} lidí. Čárkovaně jsou ti, kdo v týmu chyběli. Účetní nepatří do žádného týmu, i když ho tam občas někdo vezme.`);
-    $('#tres').scrollIntoView({behavior:'smooth'});
+    const stamp = stampFor(hit/all);
+    setScore('tym', Math.round(hit/all*100), stamp); buzz(stamp==='ok'?[20,40,30]:30); tym(); window.scrollTo(0,0);
   };
 }
 
@@ -501,43 +568,47 @@ const LINES = [
   ['„Ten záběr je rozmazaný, točíme znovu.“','kam'],
   ['„Deadline je v pátek v 10. Kdo nestíhá, ať se ozve hned.“','pm'],
   ['„Ten hook je nuda, zkusím tři jiné věty.“','copy'],
-  ['„Za reklamu jsme dali 5 000 Kč a přišlo 200 objednávek.“','perf'],
+  ['„Za reklamu jsme dali 5 000 Kč a přišlo 200 objednávek.“','perf'],
   ['„Tenhle creator má falešné sledující, nebereme ho.“','inf'],
 ];
-let match = {}, armed = 0, kdoDone = false;
+let armed = 0;
 function kdo(){
-  const t = TASKS[4];
+  const t = TASKS[4], sv = state.saved.kdo || (state.saved.kdo = {match:{}}), match = sv.match, done = isDone('kdo');
   const nameOf = id => CAST.find(c=>c[0]===id)[1];
+  const ok = LINES.filter((l,i)=>match[i]===l[1]).length;
+  if(armed!=null && match[armed]!=null){ const n = LINES.findIndex((l,i)=>match[i]==null); armed = n<0?null:n }
   app.innerHTML = `${header(t,5)}<h2>Kdo to řekl?</h2>
-  <p class="lead">Klepni na větu a pak na člověka, který ji na poradě nejspíš řekl. Jeden člověk je navíc.</p>
-  <div class="quotes">${LINES.map((l,i)=>{ const m = match[i]; const st = kdoDone?(m===l[1]?'ok':'bad'):(armed===i?'armed':'');
-    return `<button class="quote press ${st}" data-q="${i}" ${kdoDone?'disabled':''}><span class="n">${i+1}</span><span>${l[0]}</span>${m?`<span class="who">${kdoDone&&m!==l[1]?`<s>${nameOf(m)}</s> ${nameOf(l[1])}`:nameOf(m)}</span>`:''}</button>`}).join('')}</div>
+  ${done ? result('kdo', state.scores.kdo, state.stamps.kdo, `Máš správně ${ok} z 5. U každé věty níže vidíš, kdo ji opravdu řekl.`) :
+  `<p class="lead">Klepni na větu a pak dole na člověka, který ji na poradě nejspíš řekl. Jeden člověk je navíc.</p>`}
+  <div class="quotes">${LINES.map((l,i)=>{ const m = match[i], good = m===l[1]; const st = done?(good?'ok':'bad'):(armed===i?'armed':'');
+    let who = ''; if(m) who = done ? (good ? `${ic('check','')} ${nameOf(m)}` : `<s>${nameOf(m)}</s><br>Správně: ${nameOf(l[1])}`) : nameOf(m);
+    return `<button class="quote press ${st}" data-q="${i}" ${done?'disabled':''}><span class="n">${i+1}</span><span>${l[0]}</span>${who?`<span class="who ${done?(good?'y':'n'):''}">${who}</span>`:''}</button>`}).join('')}</div>
+  ${done ? '' : `<div class="castbar"><p class="hint">${armed!=null?`Kdo řekl větu ${armed+1}?`:'Všechno přiřazeno. Můžeš odeslat, nebo klepnout na větu a změnit ji.'}</p>
   <div class="cast">${CAST.map(c=>{ const used = Object.entries(match).filter(([,v])=>v===c[0]).map(([k])=>+k+1);
-    return `<button class="person press ${armed!=null&&!kdoDone?'armed':''}" data-w="${c[0]}" ${kdoDone?'disabled':''}>${used.length?`<span class="badge">${used.join(',')}</span>`:''}${sil(c[0])}<span>${c[1]}</span></button>`}).join('')}</div>
-  <div id="kres">${kdoDone?'':`<button class="btn full" id="ksub" ${Object.keys(match).length===LINES.length?'':'disabled'}>Odeslat</button>`}</div>`;
+    return `<button class="person press" data-w="${c[0]}">${used.length?`<span class="badge">${used.join(',')}</span>`:''}${sil(c[0])}<span>${c[1]}</span></button>`}).join('')}</div>
+  </div><button class="btn full" id="ksub" ${Object.keys(match).length===LINES.length?'':'disabled'}>Odeslat</button>`}`;
   app.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ armed = +b.dataset.q; buzz(10); kdo() });
-  app.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{ if(armed==null) return; match[armed]=b.dataset.w; buzz(15);
+  app.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{ if(armed==null) return; match[armed]=b.dataset.w; persist(); buzz(15);
     const next = LINES.findIndex((l,i)=>match[i]==null); armed = next<0?null:next; kdo() });
   const s = $('#ksub'); if(s) s.onclick = ()=>{
-    const ok = LINES.filter((l,i)=>match[i]===l[1]).length; kdoDone = true; kdo();
-    $('#kres').innerHTML = finish('kdo', ok*20, 100, `Správně ${ok} z 5. ${LINES.map((l,i)=>match[i]!==l[1]?`Větu ${i+1} řekl ${nameOf(l[1]).toLowerCase()}.`:'').join(' ')}`);
-    $('#kres').scrollIntoView({behavior:'smooth'});
+    setScore('kdo', ok*20, stampFor(ok/5)); buzz(ok>=4?[20,40,30]:30); kdo(); window.scrollTo(0,0);
   };
 }
 
-/* ---------- Žebříček ---------- */
+/* ---------- Žebříček (pro TV monitor) ---------- */
 let boardTimer = null;
 async function zebricek(){
-  let rows;
+  document.body.classList.add('tvmode');
+  let rows = null;
   if(SCORE_API){ try{ rows = await (await fetch(SCORE_API)).json() }catch(e){ rows = null } }
   if(!rows){ const b = load('sp-board', {}); rows = Object.entries(b).map(([nick,total])=>({nick,total})) }
-  const demo = !rows.length;
-  if(demo) rows = [{nick:'NudlovýKrál',total:420},{nick:'Markéta',total:385},{nick:'HookMaster',total:300}];
   rows.sort((a,b)=>b.total-a.total);
-  app.innerHTML = `<div class="tv"><button class="back" data-go="">${ic('back')} Zakázky</button>
-  <h1>Nejlepší marketéři dne</h1>
-  <div class="board">${rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span>${esc(r.nick)}</span><span class="s">${r.total} b</span></div>`).join('')}</div>
-  <p class="demo">${demo?'Ukázka: zatím tu nikdo není.':SCORE_API?'Obnovuje se každých 10 sekund.':'Náhled: výsledky jsou zatím jen z tohoto zařízení.'}</p></div>`;
+  app.innerHTML = `<div class="tv"><button class="back" data-go="">${ic('back')} Zpět do hry</button>
+  <div class="tvgrid"><div class="tvmain"><h1>Nejlepší marketéři dne</h1>
+  <div class="board">${rows.length ? rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)}</span><span class="s">${r.total} b</span></div>`).join('')
+    : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`}</div></div>
+  <aside class="tvqr"><div class="qrbox">${QR_SVG}</div><b>Hraj taky</b><span>Naskenuj a splň 5 zakázek pro Bataron</span></aside></div>
+  <p class="demo">${SCORE_API?'Obnovuje se každých 10 sekund.':'Zatím jen výsledky z tohoto zařízení.'}</p></div>`;
   clearTimeout(boardTimer); boardTimer = setTimeout(()=>{ if(location.hash==='#zebricek') zebricek() }, 10000);
 }
 
@@ -545,6 +616,7 @@ async function zebricek(){
 const ROUTES = {story, triky, influ, tym, kdo, zebricek};
 function route(){
   const h = location.hash.slice(1);
+  document.body.classList.remove('tvmode');
   if(ROUTES[h] && (state.nick || h==='zebricek')) ROUTES[h](); else home();
   window.scrollTo(0,0);
 }
