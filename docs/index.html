@@ -144,6 +144,11 @@ svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .camp{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
 .camp.right{border:2px solid var(--turq-d)}.camp.wrong{border:2px solid var(--bad)}
 .camp .need{font-size:.9rem;color:var(--muted)}
+.fb{display:flex;gap:8px;align-items:flex-start;font-size:.98rem;padding:10px 12px;border-radius:8px}
+.fb svg{width:20px;height:20px;flex:none;margin-top:1px;fill:none;stroke-width:3;stroke-linecap:round}
+.fb.y{background:var(--soft)}.fb.y svg{stroke:var(--turq-d)}
+.fb.n{background:#FBECEA}.fb.n svg{stroke:var(--bad)}
+.quote .who s{color:var(--bad);margin-right:4px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:2px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 12px;font-size:.92rem;font-weight:500;transition:background .15s,transform .14s cubic-bezier(.2,.8,.2,1)}
 .chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
@@ -164,7 +169,7 @@ details.legend summary{cursor:pointer;font-weight:700}
 .quote{background:var(--card);border:2px solid var(--line);border-radius:14px 14px 14px 3px;padding:12px 14px;text-align:left;display:flex;gap:10px;align-items:flex-start;font-size:1rem}
 .quote .n{font-family:var(--disp);font-weight:900;font-size:.9rem;background:var(--navy);color:#fff;border-radius:999px;width:26px;height:26px;flex:none;display:grid;place-items:center}
 .quote.armed{border-color:var(--mag);box-shadow:0 8px 18px -12px rgba(210,42,136,.8)}
-.quote .who{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--mag);white-space:nowrap}
+.quote .who{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--mag);text-align:right;max-width:40%}
 .quote.ok{border-color:var(--turq-d)}.quote.bad{border-color:var(--bad)}
 /* Žebříček (navy obrazovka) */
 .tv{background:var(--navy);color:#fff;border-radius:12px;padding:22px;display:grid;gap:14px}
@@ -461,7 +466,11 @@ function tym(){
   <p class="lead">Pro každou kampaň vyber lidi z agentury. Kolik jich potřebuješ, je napsané u kampaně. Ty jako projekťák jsi v každém týmu automaticky.</p>
   <details class="legend"><summary>Kdo co dělá</summary><br><div class="roles">${ROLES.map(r=>`<div class="role"><b>${r[1]}</b>${r[2]}</div>`).join('')}</div></details>
   ${CAMPS.map((c,ci)=>{ const ok = teamDone && c.a.every(x=>team[ci].has(x)) && team[ci].size===c.n;
-    return `<section class="camp ${teamDone?(ok?'right':'wrong'):''}"><h3>${c.t}</h3><span class="need">Vyber ${c.n} · vybráno ${team[ci].size}</span>
+    const rn = id => ROLES.find(r=>r[0]===id)[1].toLowerCase();
+    const miss = c.a.filter(x=>!team[ci].has(x)).map(rn), extra = [...team[ci]].filter(x=>!c.a.includes(x)).map(rn);
+    const fb = !teamDone ? '' : ok ? `<p class="fb y">${ic('check','')}<span><b>Správně.</b> Tenhle tým kampaň zvládne.</span></p>`
+      : `<p class="fb n">${ic('x','')}<span><b>Tady je chyba.</b>${miss.length?` Chyběl ti: ${miss.join(', ')}.`:''}${extra.length?` Navíc jsi vzal: ${extra.join(', ')}.`:''}</span></p>`;
+    return `<section class="camp ${teamDone?(ok?'right':'wrong'):''}"><h3>${c.t}</h3>${teamDone?fb:`<span class="need">Vyber ${c.n} · vybráno ${team[ci].size}</span>`}
     <div class="chips">${ROLES.map(r=>{ const on=team[ci].has(r[0]); let cls = on?'on':'';
       if(teamDone){ cls = c.a.includes(r[0]) ? (on?'ok':'miss') : (on?'bad':'') }
       return `<button class="chip press ${cls}" data-c="${ci}" data-r="${r[0]}" ${teamDone?'disabled':''}>${r[1]}</button>`}).join('')}</div></section>`}).join('')}
@@ -503,7 +512,7 @@ function kdo(){
   app.innerHTML = `${header(t,5)}<h2>Kdo to řekl?</h2>
   <p class="lead">Klepni na větu a pak na člověka, který ji na poradě nejspíš řekl. Jeden člověk je navíc.</p>
   <div class="quotes">${LINES.map((l,i)=>{ const m = match[i]; const st = kdoDone?(m===l[1]?'ok':'bad'):(armed===i?'armed':'');
-    return `<button class="quote press ${st}" data-q="${i}" ${kdoDone?'disabled':''}><span class="n">${i+1}</span><span>${l[0]}</span>${m?`<span class="who">${nameOf(m)}</span>`:''}</button>`}).join('')}</div>
+    return `<button class="quote press ${st}" data-q="${i}" ${kdoDone?'disabled':''}><span class="n">${i+1}</span><span>${l[0]}</span>${m?`<span class="who">${kdoDone&&m!==l[1]?`<s>${nameOf(m)}</s> ${nameOf(l[1])}`:nameOf(m)}</span>`:''}</button>`}).join('')}</div>
   <div class="cast">${CAST.map(c=>{ const used = Object.entries(match).filter(([,v])=>v===c[0]).map(([k])=>+k+1);
     return `<button class="person press ${armed!=null&&!kdoDone?'armed':''}" data-w="${c[0]}" ${kdoDone?'disabled':''}>${used.length?`<span class="badge">${used.join(',')}</span>`:''}${sil(c[0])}<span>${c[1]}</span></button>`}).join('')}</div>
   <div id="kres">${kdoDone?'':`<button class="btn full" id="ksub" ${Object.keys(match).length===LINES.length?'':'disabled'}>Odeslat</button>`}</div>`;
