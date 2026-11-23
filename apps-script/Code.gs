@@ -4,9 +4,9 @@
 function sheet_(){ const ss = SpreadsheetApp.getActive(); return ss.getSheetByName('Body') || ss.insertSheet('Body'); }
 function doPost(e){
   const d = JSON.parse(e.postData.contents);
-  const nick = String(d.nick||'').slice(0,18), task = String(d.task||'').slice(0,10), pts = Math.max(0, Math.min(100, Number(d.points)||0));
+  const nick = String(d.nick||"").slice(0,18), task = String(d.task||"").slice(0,10), pts = Math.max(0, Math.min(400, Number(d.points)||0)), secs = Math.max(0, Number(d.secs)||0);
   if(!nick || !task) return ContentService.createTextOutput('bad');
-  sheet_().appendRow([new Date(), nick, task, pts]);
+  sheet_().appendRow([new Date(), nick, task, pts, secs]);
   return ContentService.createTextOutput('ok');
 }
 function doGet(){

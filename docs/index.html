@@ -238,6 +238,27 @@ body.tvmode{padding-block:16px}
 .tvhead .pic{filter:drop-shadow(0 8px 12px rgba(0,0,0,.4))}
 .verdict.y svg{stroke:var(--turq-d)}.verdict.n svg{stroke:var(--bad)}
 .verdict svg{fill:none;stroke-width:3}
+.clock{display:flex;gap:8px;align-items:center;background:var(--navy);color:#fff;border-radius:8px;padding:10px 12px;font-size:.95rem;font-variant-numeric:tabular-nums}
+.clock svg{width:20px;height:20px;fill:none;stroke:var(--turq);stroke-width:2.2;stroke-linecap:round;flex:none}
+.clock b{font-family:var(--disp);font-size:1.15rem;color:var(--turq)}
+.clock.hurry b{color:var(--mag)}.clock.hurry svg{stroke:var(--mag)}
+.clock.out{background:#E4E9EC;color:var(--muted)}.clock.out svg{stroke:var(--muted)}
+.fx{position:fixed;inset:0;z-index:50;pointer-events:none;display:grid;place-items:center;overflow:hidden}
+.fx-good{background:radial-gradient(circle at 50% 50%,rgba(48,227,202,.35),transparent 60%);animation:fxfade .9s ease-out forwards}
+.fx-bad{background:radial-gradient(circle at 50% 50%,rgba(200,55,45,.28),transparent 60%);animation:fxfade .9s ease-out forwards}
+.fx-win{background:rgba(22,50,63,.55);animation:fxfade 1.6s ease-out forwards}
+.fx-badge{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--disp);font-weight:900;font-size:1.8rem;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35);animation:fxpop .55s cubic-bezier(.2,1.5,.4,1) both}
+.fx-badge svg{width:96px;height:96px;border-radius:50%;padding:18px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;box-shadow:0 12px 30px -8px rgba(0,0,0,.45)}
+.fx-good .fx-badge svg,.fx-win .fx-badge svg{background:var(--turq-d)}
+.fx-bad .fx-badge svg{background:var(--bad);animation:wobble .5s ease-in-out}
+.fx-good .fx-badge span,.fx-bad .fx-badge span{color:var(--navy);text-shadow:none;background:#fff;padding:6px 16px;border-radius:999px;box-shadow:0 10px 24px -10px rgba(0,0,0,.4)}
+.fx i{position:absolute;left:50%;top:58%;width:10px;height:16px;border-radius:2px;animation:confetti 1.3s cubic-bezier(.15,.7,.3,1) var(--d) both}
+@keyframes fxfade{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}
+@keyframes fxpop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes wobble{0%,100%{transform:rotate(0)}20%{transform:rotate(-14deg)}40%{transform:rotate(12deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}}
+@keyframes confetti{0%{transform:translate(-50%,0) rotate(0);opacity:1}100%{transform:translate(calc(-50% + var(--x)),calc(var(--y) + 60vh)) rotate(var(--r));opacity:0}}
+.shake{animation:shake .45s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
 
@@ -259,6 +280,7 @@ body.tvmode{padding-block:16px}
   <symbol id="i-plane" viewBox="0 0 24 24"><path d="M2 13l20-8-6 16-4-7z"/></symbol>
   <symbol id="i-dumb" viewBox="0 0 24 24"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></symbol>
   <symbol id="i-pad" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="5"/><path d="M7 10v4M5 12h4M16 11h.01M18 13h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></symbol>
   <symbol id="i-laugh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0zM9 9h.01M15 9h.01"/></symbol>
 </svg>
 
@@ -294,12 +316,12 @@ state = Object.assign({nick:'', scores:{}, saved:{}}, state);
 const persist = () => save('sp-state2', state);
 const total = () => Object.values(state.scores).reduce((a,b)=>a+b,0);
 const isDone = id => state.scores[id] != null;
-function setScore(task, pts){
+function setScore(task, pts, secs){
   const before = total();
   state.scores[task] = pts; persist();
   countUp(before, total());
   const board = load('sp-board', {}); board[state.nick] = total(); save('sp-board', board);
-  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts})}).catch(()=>{});
+  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts, secs})}).catch(()=>{});
 }
 function updPts(){ $('#pts').textContent = total() + ' b' }
 function countUp(a, b){
@@ -316,6 +338,36 @@ const TASKS = [
   {id:'kdo', pic:'i-chat', name:'Kdo to řekl?', role:'Porada v agentuře', time:'2 min', badge:'Agenturní insider'},
 ];
 const T = id => TASKS.find(t=>t.id===id);
+/* Čas: od prvního otevření úkolu. Při plném počtu bodů se zbývající sekundy připíšou jako bonus (David 23. 11.). */
+const LIMIT = {story:240, triky:180, influ:180, tym:180, kdo:120};
+let clockTimer = null;
+function startClock(sv){ if(!sv.start){ sv.start = Date.now(); persist() } }
+const elapsed = id => Math.round((Date.now() - ((state.saved[id]||{}).start || Date.now()))/1000);
+const mmss = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+function runClock(id){
+  clearInterval(clockTimer);
+  const tick = () => { const el = $('#clock'); if(!el || isDone(id)){ if(isDone(id)) clearInterval(clockTimer); return } const left = LIMIT[id] - elapsed(id);
+    el.innerHTML = left > 0 ? `${ic('clock','')}<span>Bonus za rychlost: <b>${mmss(left)}</b></span>` : `${ic('clock','')}<span>Bonus za rychlost vypršel, body za správnost platí dál.</span>`;
+    el.classList.toggle('out', left <= 0); el.classList.toggle('hurry', left > 0 && left <= 30) };
+  tick(); clockTimer = setInterval(tick, 1000);
+}
+function award(id, base){
+  const secs = elapsed(id), bonus = base >= 100 ? Math.max(0, LIMIT[id] - secs) : 0;
+  state.bonus = state.bonus || {}; state.secs = state.secs || {};
+  state.bonus[id] = bonus; state.secs[id] = secs; clearInterval(clockTimer);
+  setScore(id, base + bonus, secs); fx('win', 'Schváleno!');
+}
+/* Animace dobře / špatně: overlay přes celou obrazovku, při dokončení konfety */
+function fx(kind, msg){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ return }
+  document.querySelectorAll('.fx').forEach(n=>n.remove());
+  const d = document.createElement('div'); d.className = 'fx fx-'+kind; d.setAttribute('aria-hidden','true');
+  d.innerHTML = `<div class="fx-badge">${ic(kind==='bad'?'x':'check','')}<span>${msg}</span></div>` +
+    (kind==='win' ? Array.from({length:28},(_,i)=>`<i style="--x:${(Math.random()*2-1)*48}vw;--y:${-(30+Math.random()*45)}vh;--r:${Math.random()*720-360}deg;--d:${(Math.random()*.25).toFixed(2)}s;background:${['#30E3CA','#D22A88','#16323F','#FFFFFF'][i%4]}"></i>`).join('') : '');
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), kind==='win' ? 1600 : 900);
+}
+function shake(el){ if(!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake') }
 
 /* ---------- Domů ---------- */
 function home(){
@@ -364,16 +416,17 @@ function tilt(el){
   el.addEventListener('click', ()=>{ const D = window.DeviceOrientationEvent; if(D && D.requestPermission) D.requestPermission().then(r=>{ if(r==='granted') addEventListener('deviceorientation', onOri) }).catch(()=>{}) });
   if(window.DeviceOrientationEvent && !DeviceOrientationEvent.requestPermission) addEventListener('deviceorientation', onOri);
 }
-function header(t, n){ return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role}</span><span>Zakázka ${n} z 5</span></div>` }
+function header(t, n){ return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role}</span><span>Zakázka ${n} z 5</span></div>${isDone(t.id)?'':'<div class="clock" id="clock" aria-live="off"></div>'}` }
 /* výsledek: vždy až po 100 % správně; fresh = právě dokončeno */
 function result(task, text, tries, fresh){
   const t = T(task);
-  if(fresh){ setScore(task, task==='story'?100:triesPts(tries)); buzz([20,40,30]) }
-  const pts = state.scores[task];
+  if(fresh){ award(task, task==='story'?100:triesPts(tries)); buzz([20,40,30]) }
+  const pts = state.scores[task], bonus = (state.bonus||{})[task] || 0, base = pts - bonus, secs = (state.secs||{})[task];
   return `<div class="result" id="res"><div class="medal">${img(t.pic,96)}</div>
   <span class="bigstamp">SCHVÁLENO</span>
   <span class="badge-name">Odznak: ${t.badge}</span>
-  <span class="big">${pts} / 100 b</span>
+  <span class="big">${pts} b</span>
+  <p class="tries">${bonus ? `Za správnost ${base} b + bonus za rychlost ${bonus} b (hotovo za ${mmss(secs||0)}).` : base>=100 ? `Za správnost ${base} b. Bonus za rychlost už vypršel.` : `Za správnost ${base} b. Bonus za rychlost je jen za výsledek bez chyby.`}</p>
   <p>${text}</p>
   ${task!=='story'?`<p class="tries">${tries===1?'Napoprvé, bez jediné chyby.':`Zvládnuto na ${tries}. pokus. Čím méně pokusů, tím víc bodů.`}</p>`:''}
   <p>Ukaž tuhle obrazovku dobrovolníkovi a vyzvedni si razítko v aplikaci Options.</p>
@@ -387,7 +440,7 @@ const HOOKS = ['Večeře za 3 minuty, která není z mikrovlnky','Tohle jsem od 
 const STORY_CHECKS = ['Hook: první věta nebo text diváka zastaví do 2 sekund','Kelímek Bataronu je v záběru jasně vidět','Řekneš nebo napíšeš, proč to zkusit','Označíš @options a @shortpro'];
 let hookI = 0;
 function story(){
-  const t = T('story'), sv = state.saved.story || {on:[]}, done = isDone('story');
+  const t = T('story'), sv = state.saved.story || (state.saved.story = {on:[]}), done = isDone('story'); if(!done) startClock(sv);
   const txt = 'Přesně tohle dělá každý den náš kreativní tým: hook, produkt, důvod ke koupi a označení.';
   app.innerHTML = `${header(t,1)}<h2>Natoč Story, které zastaví palec</h2>
   ${done ? result('story', txt, 1) : ''}
@@ -409,7 +462,7 @@ function story(){
   $('#nexthook').onclick = ()=>{ hookI=(hookI+1)%HOOKS.length; const h=$('#hook'); h.style.transform='scale(.94)'; setTimeout(()=>{ h.textContent = HOOKS[hookI]; h.style.transform='' },120) };
   app.querySelectorAll('[data-chk]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.chk; sv.on[i]=!sv.on[i]; state.saved.story=sv; persist(); b.classList.toggle('on'); buzz(10) });
   const f = $('#pinf'); if(f) f.addEventListener('submit', e=>{ e.preventDefault();
-    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá dobrovolník.'; buzz([30,40,30]); return }
+    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá dobrovolník.'; buzz([30,40,30]); fx('bad','Kód nesedí'); shake($('#pinf')); return }
     $('#pinwrap').hidden = true;
     $('#sres').innerHTML = result('story', txt, 1, true); toRes();
   });
@@ -451,11 +504,11 @@ const TRICKS = [
 ];
 function triky(){
   const t = T('triky'), sv = state.saved.triky || (state.saved.triky = {q:0, wrong:[], att:[]});
-  if(!sv.att) sv.att = [];
+  if(!sv.att) sv.att = []; if(!isDone('triky')) startClock(sv);
   const tries = sv.att.reduce((a,b)=>a+b,0) - TRICKS.length + 1; // 1 = vše napoprvé
   if(sv.q >= TRICKS.length){
     const fresh = !isDone('triky');
-    if(fresh){ const avg = sv.att.reduce((a,n)=>a+[100,60,30][Math.min(n,3)-1],0)/TRICKS.length; setScore('triky', Math.round(avg)); buzz([20,40,30]) }
+    if(fresh){ const avg = sv.att.reduce((a,n)=>a+[100,60,30][Math.min(n,3)-1],0)/TRICKS.length; award('triky', Math.round(avg)); buzz([20,40,30]) }
     app.innerHTML = `${header(t,2)}<h2>Teď víš, jak tě obchody ovlivňují</h2>` +
       result('triky', `Všech ${TRICKS.length} triků máš správně. Až půjdeš příště nakupovat, zkus najít aspoň tři z nich.`, Math.max(1,tries)) +
       `<div class="recap">${TRICKS.map(Q=>`<p class="fb y">${ic('check','')}<span><b>${Q.e[0]}.</b> ${Q.q}</span></p>`).join('')}</div>`;
@@ -472,8 +525,8 @@ function triky(){
   <div id="ex">${wrong.size?warn('To není ono. Zkus jinou odpověď.'):''}</div>`;
   app.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{
     const i = +b.dataset.o;
-    if(i !== Q.a){ sv.wrong.push(i); persist(); buzz([30,40,30]); triky(); return }
-    sv.att[sv.q] = sv.wrong.length + 1; persist(); buzz(20);
+    if(i !== Q.a){ sv.wrong.push(i); persist(); buzz([30,40,30]); fx('bad','To není ono'); triky(); shake(app.querySelector(`[data-o="${i}"]`)); return }
+    sv.att[sv.q] = sv.wrong.length + 1; persist(); buzz(20); fx('good','Správně!');
     app.querySelectorAll('[data-o]').forEach(x=>{ x.disabled=true; if(+x.dataset.o===Q.a){ x.classList.add('ok'); x.querySelector('.mark').innerHTML = ic('check','') } });
     $('#ex').innerHTML = `<div class="explain y"><strong>Správně. ${Q.e[0]}</strong>${Q.e[1]}</div><br><button class="btn full" id="nq">${sv.q+1<TRICKS.length?'Další otázka':'Odevzdat klientovi'}</button>`;
     $('#nq').onclick = ()=>{ sv.q++; sv.wrong = []; persist(); triky(); window.scrollTo(0,0) };
@@ -497,7 +550,7 @@ const INF = [
 ];
 function influ(){
   const t = T('influ'), sv = state.saved.influ || (state.saved.influ = {pick:[], tries:0, msg:''});
-  const pick = new Set(sv.pick), done = isDone('influ');
+  const pick = new Set(sv.pick), done = isDone('influ'); if(!done) startClock(sv);
   const spent = [...pick].reduce((a,i)=>a+INF[i].price,0);
   app.innerHTML = `${header(t,3)}<h2>Najdi influencery pro Bataron</h2>
   ${done ? result('influ', 'Správně jsou @gamer_tom a @foodie.linh za 27 000 Kč. Víc sledujících neznamená lepší výběr. Rozhoduje, kdo je sleduje a jestli reagují. Proč u každého profilu, najdeš níže.', sv.tries) :
@@ -523,7 +576,7 @@ function influ(){
     if(!bad && !missing){ sv.msg=''; persist(); result('influ','',sv.tries,true); influ(); window.scrollTo(0,0); return }
     sv.msg = bad ? 'Klient to vrátil: aspoň jeden vybraný profil se pro Bataron nehodí. Podívej se znovu na publikum, engagement a témata.'
                  : 'Klient to vrátil: dobrý začátek, ale za tenhle rozpočet se dá oslovit víc správných lidí.';
-    persist(); buzz([30,40,30]); influ(); window.scrollTo(0,0);
+    persist(); buzz([30,40,30]); fx('bad','Klient to vrátil'); influ(); window.scrollTo(0,0); shake(app.querySelector('.warnbox'));
   };
 }
 
@@ -541,7 +594,7 @@ const CAMPS = [
 ];
 function tym(){
   const t = T('tym'), sv = state.saved.tym || (state.saved.tym = {team:CAMPS.map(()=>[]), tries:0, checked:CAMPS.map(()=>null)});
-  const team = sv.team.map(a=>new Set(a)), done = isDone('tym');
+  const team = sv.team.map(a=>new Set(a)), done = isDone('tym'); if(!done) startClock(sv);
   const campOk = ci => CAMPS[ci].a.every(x=>team[ci].has(x)) && team[ci].size===CAMPS[ci].n;
   app.innerHTML = `${header(t,4)}<h2>Jsi projektový manažer. Sestav týmy.</h2>
   ${done ? result('tym', 'Všechny 3 týmy máš sestavené správně. Přesně takhle se v agentuře skládá tým na každou zakázku.', sv.tries) :
@@ -559,7 +612,7 @@ function tym(){
   const s = $('#tsub'); if(s) s.onclick = ()=>{
     sv.tries++; sv.checked = CAMPS.map((c,ci)=>campOk(ci)); persist();
     if(sv.checked.every(Boolean)){ result('tym','',sv.tries,true); tym(); window.scrollTo(0,0); return }
-    buzz([30,40,30]); tym(); const w = app.querySelector('.camp.wrong'); if(w) w.scrollIntoView({behavior:'smooth', block:'center'});
+    buzz([30,40,30]); fx('bad','Ještě to nesedí'); tym(); app.querySelectorAll('.camp.wrong').forEach(shake); const w = app.querySelector('.camp.wrong'); if(w) w.scrollIntoView({behavior:'smooth', block:'center'});
   };
 }
 
@@ -586,7 +639,7 @@ const LINES = [
 let armed = 0;
 function kdo(){
   const t = T('kdo'), sv = state.saved.kdo || (state.saved.kdo = {match:{}, tries:0, ok:[], bad:[]});
-  const match = sv.match, done = isDone('kdo'), okSet = new Set(sv.ok), badSet = new Set(sv.bad);
+  const match = sv.match, done = isDone('kdo'), okSet = new Set(sv.ok), badSet = new Set(sv.bad); if(!done) startClock(sv);
   const nameOf = id => CAST.find(c=>c[0]===id)[1];
   if(armed==null || match[armed]!=null || okSet.has(armed)){ const n = LINES.findIndex((l,i)=>match[i]==null); armed = n<0?null:n }
   app.innerHTML = `${header(t,5)}<h2>Kdo to řekl?</h2>
@@ -608,7 +661,7 @@ function kdo(){
     LINES.forEach((l,i)=>{ if(match[i]===l[1]) okSet.add(i); else { badSet.add(i); delete match[i] } });
     sv.ok=[...okSet]; sv.bad=[...badSet]; persist();
     if(okSet.size===LINES.length){ result('kdo','',sv.tries,true); kdo(); window.scrollTo(0,0); return }
-    buzz([30,40,30]); armed = LINES.findIndex((l,i)=>match[i]==null); kdo(); window.scrollTo(0,0);
+    buzz([30,40,30]); fx('bad','Ještě to nesedí'); armed = LINES.findIndex((l,i)=>match[i]==null); kdo(); window.scrollTo(0,0); app.querySelectorAll('.quote.bad').forEach(shake);
   };
 }
 
@@ -633,8 +686,8 @@ async function zebricek(){
 const ROUTES = {story, triky, influ, tym, kdo, zebricek};
 function route(){
   const h = location.hash.slice(1);
-  document.body.classList.remove('tvmode');
-  if(ROUTES[h] && (state.nick || h==='zebricek')) ROUTES[h](); else home();
+  document.body.classList.remove('tvmode'); clearInterval(clockTimer);
+  if(ROUTES[h] && (state.nick || h==='zebricek')){ ROUTES[h](); if(LIMIT[h]) runClock(h) } else home();
   window.scrollTo(0,0);
 }
 document.addEventListener('click', e=>{ const g = e.target.closest('[data-go]'); if(!g || g.disabled) return; location.hash = g.dataset.go; if(!g.dataset.go) route() });
