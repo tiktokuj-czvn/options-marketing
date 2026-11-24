@@ -333,12 +333,12 @@ const TASKS = [
   {id:'story', pic:'i-cam', name:'Story pro Instagram', role:'Kreativa', time:'4 min', badge:'Kreativec'},
   {id:'triky', pic:'i-bulb', name:'Prodejní triky', role:'Strategie', time:'3 min', badge:'Stratég'},
   {id:'influ', pic:'i-influ', name:'Výběr influencera', role:'Analytika', time:'3 min', badge:'Analytik'},
-  {id:'tym', pic:'i-team', name:'Tým kampaně', role:'Projektové řízení', time:'3 min', badge:'Projekťák'},
+  {id:'tym', pic:'i-team', name:'Tým kampaně', role:'Projektové řízení', time:'4 min', badge:'Projekťák'},
   {id:'kdo', pic:'i-chat', name:'Kdo to řekl?', role:'Porada v agentuře', time:'2 min', badge:'Agenturní insider'},
 ];
 const T = id => TASKS.find(t=>t.id===id);
 /* Čas: od prvního otevření úkolu. Při plném počtu bodů se zbývající sekundy připíšou jako bonus (David 23. 11.). */
-const LIMIT = {story:240, triky:180, influ:180, tym:180, kdo:120};
+const LIMIT = {story:240, triky:180, influ:180, tym:240, kdo:120};
 let clockTimer = null;
 function startClock(sv){ if(!sv.start){ sv.start = Date.now(); persist() } }
 const elapsed = id => Math.round((Date.now() - ((state.saved[id]||{}).start || Date.now()))/1000);
@@ -590,13 +590,15 @@ const CAMPS = [
   {t:'Reklamní video na TikTok s herečkou', n:4, a:['kam','her','zvuk','str']},
   {t:'Plakát a leták do večerek', n:2, a:['gra','copy']},
   {t:'Kampaň s influencery za 50 000 Kč, vyhodnocená podle prodejů', n:2, a:['inf','perf']},
+  {t:'Ochutnávka Bataronu na festivalu: natočit a sestříhat aftermovie, navrhnout vizuál stánku, během akce sdílet stories a odpovídat na komentáře, placenou reklamou pozvat lidi z okolí', n:5, a:['kam','str','gra','smm','perf']},
 ];
 function tym(){
   const t = T('tym'), sv = state.saved.tym || (state.saved.tym = {team:CAMPS.map(()=>[]), tries:0, checked:CAMPS.map(()=>null)});
+  while(sv.team.length<CAMPS.length){ sv.team.push([]); sv.checked.push(null) }
   const team = sv.team.map(a=>new Set(a)), done = isDone('tym'); if(!done) startClock(sv);
   const campOk = ci => CAMPS[ci].a.every(x=>team[ci].has(x)) && team[ci].size===CAMPS[ci].n;
   app.innerHTML = `${header(t,4)}<h2>Jsi projektový manažer. Sestav týmy.</h2>
-  ${done ? result('tym', 'Všechny 3 týmy máš sestavené správně. Přesně takhle se v agentuře skládá tým na každou zakázku.', sv.tries) :
+  ${done ? result('tym', 'Všechny 4 týmy máš sestavené správně. Přesně takhle se v agentuře skládá tým na každou zakázku.', sv.tries) :
   `<p class="lead">Pro každou kampaň vyber lidi z agentury. Kolik jich potřebuješ, je napsané u kampaně. Ty jako projekťák jsi v každém týmu automaticky.</p>`}
   <details class="legend"><summary>Kdo co dělá</summary><br><div class="roles">${ROLES.map(r=>`<div class="role"><b>${r[1]}</b>${r[2]}</div>`).join('')}</div></details>
   ${CAMPS.map((c,ci)=>{ const ch = sv.checked[ci], locked = done || ch===true;
