@@ -32,6 +32,9 @@ svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .pts{font-family:var(--disp);font-weight:800;font-size:.95rem;background:var(--turq);color:var(--navy);padding:6px 12px;border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .screen{display:grid;gap:18px}
 .lead{color:var(--muted)}
+.who{display:grid;gap:6px;justify-items:start}
+.out{border:0;background:none;padding:6px 0;font:inherit;font-size:.92rem;color:var(--navy);text-decoration:underline;text-underline-offset:3px}
+.out.sure{color:var(--mag);font-weight:700}
 .btn{border:0;border-radius:10px;padding:15px 18px;font-family:var(--disp);font-weight:800;font-size:1.05rem;background:var(--mag);color:#fff;transition:transform .12s cubic-bezier(.2,.8,.2,1),box-shadow .2s;box-shadow:0 6px 16px -8px rgba(210,42,136,.7)}
 .btn.dark{background:var(--navy);box-shadow:0 6px 16px -8px rgba(22,50,63,.7)}
 .btn.ghost{background:var(--card);color:var(--navy);border:2px solid var(--navy);box-shadow:none}
@@ -444,7 +447,7 @@ function home(){
     <div class="hero-cup" id="herocup">${img('cup',150)}</div>
     <div class="progress" style="grid-column:1/-1" aria-label="Hotovo ${done} z 5">${TASKS.map(t=>`<i class="${isDone(t.id)?'on':''}"></i>`).join('')}</div>
   </section>`}
-  ${state.nick ? `<p class="lead">Pracuješ jako <b>${esc(state.nick)}</b>. Pořadí zakázek je na tobě.</p>` : nickForm(pending)}
+  ${state.nick ? `<div class="who"><p class="lead">Pracuješ jako <b>${esc(state.nick)}</b>. Pořadí zakázek je na tobě.</p><button class="out" id="out" type="button">Nejsi ${esc(state.nick)}? Odhlásit</button></div>` : nickForm(pending)}
   <div class="jobs">${TASKS.map(t=>{
     const s = state.scores[t.id];
     return `<button class="job press ${s!=null?'done':''}" data-go="${t.id}" ${state.nick?'':'disabled'}>
@@ -452,7 +455,15 @@ function home(){
       <span class="t"><b>${t.name}</b><small>${s!=null?`Odznak ${t.badge}`:`<b class="lvl lvl-${t.lvl.toLowerCase()}">${t.lvl}</b> ${100*MULT[t.lvl]} b · ${t.time}`}</small></span>
       ${s!=null?`<span class="stamp">${s} b</span>`:`<span class="go">Začít</span>`}</button>`}).join('')}</div>
   <button class="btn dark full" data-go="zebricek">Žebříček dne</button>`;
-  bindNick(); tilt($('#herocup'));
+  bindNick(); bindOut(); tilt($('#herocup'));
+}
+/* Odhlášení pro sdílené zařízení u stánku: body v žebříčku zůstanou, hra začne od nuly */
+function bindOut(){
+  const b = $('#out'); if(!b) return;
+  b.addEventListener('click', ()=>{
+    if(!b.classList.contains('sure')){ b.classList.add('sure'); b.textContent = 'Opravdu odhlásit? Body v žebříčku zůstanou. Klepni znovu'; setTimeout(()=>{ if(b.isConnected){ b.classList.remove('sure'); b.textContent = `Nejsi ${state.nick}? Odhlásit` } }, 5000); return }
+    state = {nick:'', scores:{}, saved:{}}; persist(); updPts(); location.hash = ''; home(); window.scrollTo(0,0);
+  });
 }
 function nickForm(pending){
   return `<form class="nick" id="nickf">${pending?`<span class="hint">Jdeš na úkol <b>${pending.name}</b>. Nejdřív se představ.</span>`:''}<label for="nick">Jak ti máme říkat?</label>
