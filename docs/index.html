@@ -347,10 +347,10 @@ function countUp(a, b){
 
 const TASKS = [
   {id:'story', pic:'i-cam', name:'Story pro Instagram', role:'Kreativa', time:'4 min', badge:'Kreativec', lvl:'Junior'},
+  {id:'kdo', pic:'i-chat', name:'Kdo to řekl?', role:'Porada v agentuře', time:'2 min', badge:'Agenturní insider', lvl:'Junior'},
   {id:'triky', pic:'i-bulb', name:'Prodejní triky', role:'Strategie', time:'3 min', badge:'Stratég', lvl:'Medior'},
   {id:'influ', pic:'i-influ', name:'Výběr influencera', role:'Analytika', time:'3 min', badge:'Analytik', lvl:'Senior'},
   {id:'tym', pic:'i-team', name:'Tým kampaně', role:'Projektové řízení', time:'4 min', badge:'Projekťák', lvl:'Senior'},
-  {id:'kdo', pic:'i-chat', name:'Kdo to řekl?', role:'Porada v agentuře', time:'2 min', badge:'Agenturní insider', lvl:'Junior'},
 ];
 const T = id => TASKS.find(t=>t.id===id);
 /* Čas: od prvního otevření úkolu. Při plném počtu bodů se zbývající sekundy připíšou jako bonus (David 23. 11.). */
@@ -474,7 +474,7 @@ function tilt(el){
   el.addEventListener('click', ()=>{ const D = window.DeviceOrientationEvent; if(D && D.requestPermission) D.requestPermission().then(r=>{ if(r==='granted') addEventListener('deviceorientation', onOri) }).catch(()=>{}) });
   if(window.DeviceOrientationEvent && !DeviceOrientationEvent.requestPermission) addEventListener('deviceorientation', onOri);
 }
-function header(t, n){ return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role} · ${t.lvl}</span><span>Zakázka ${n} z 5</span></div>${isDone(t.id)?'':'<div class="clock" id="clock" aria-live="off"></div>'}` }
+function header(t){ const n = TASKS.indexOf(t)+1; return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role} · ${t.lvl}</span><span>Zakázka ${n} z 5</span></div>${isDone(t.id)?'':'<div class="clock" id="clock" aria-live="off"></div>'}` }
 /* výsledek: vždy až po 100 % správně; fresh = právě dokončeno */
 function result(task, text, tries, fresh){
   const t = T(task);
@@ -502,7 +502,7 @@ let hookI = 0;
 function story(){
   const t = T('story'), sv = state.saved.story || (state.saved.story = {on:[]}), done = isDone('story'); if(!done) startClock(sv);
   const txt = 'Přesně tohle dělá každý den náš kreativní tým: hook, produkt, důvod ke koupi a označení.';
-  app.innerHTML = `${header(t,1)}<h2>Natoč Story, které zastaví palec</h2>
+  app.innerHTML = `${header(t)}<h2>Natoč Story, které zastaví palec</h2>
   ${done ? result('story', txt, 1) : ''}
   <p class="lead">Jsi tvůrce obsahu pro Bataron. Vezmi si kelímek ze stolu a natoč Story do 15 sekund. Stačí jeden záběr nebo tři krátké.</p>
   <div class="phone"><div class="bars"><i></i><i></i><i></i></div>
@@ -569,7 +569,7 @@ function triky(){
   if(sv.q >= TRICKS.length){
     const fresh = !isDone('triky');
     if(fresh){ const avg = sv.att.reduce((a,n)=>a+[100,60,30][Math.min(n,3)-1],0)/TRICKS.length; award('triky', Math.round(avg)); buzz([20,40,30]) }
-    app.innerHTML = `${header(t,2)}<h2>Teď víš, jak tě obchody ovlivňují</h2>` +
+    app.innerHTML = `${header(t)}<h2>Teď víš, jak tě obchody ovlivňují</h2>` +
       result('triky', `Všech ${TRICKS.length} triků máš správně. Až půjdeš příště nakupovat, zkus najít aspoň tři z nich.`, Math.max(1,tries)) +
       `<div class="recap">${TRICKS.map(Q=>`<p class="fb y">${ic('check','')}<span><b>${Q.e[0]}.</b> ${Q.q}</span></p>`).join('')}</div>`;
     return;
@@ -577,7 +577,7 @@ function triky(){
   const Q = TRICKS[sv.q];
   if(!sv.order || sv.order.q !== sv.q){ const rest = Q.o.map((x,i)=>i).filter(i=>i!==Q.a); rest.splice(Q.pos,0,Q.a); sv.order = {q:sv.q, o:rest} }
   const order = sv.order.o, wrong = new Set(sv.wrong);
-  app.innerHTML = `${header(t,2)}
+  app.innerHTML = `${header(t)}
   <div class="qprog" aria-label="Otázka ${sv.q+1} ze ${TRICKS.length}">${TRICKS.map((x,i)=>`<i class="${i<sv.q?'ok':i===sv.q?'cur':''}"></i>`).join('')}</div>
   <div class="scene">${Q.scene()}</div>
   <h2>${Q.q}</h2>
@@ -612,7 +612,7 @@ function influ(){
   const t = T('influ'), sv = state.saved.influ || (state.saved.influ = {pick:[], tries:0, msg:''});
   const pick = new Set(sv.pick), done = isDone('influ'); if(!done) startClock(sv);
   const spent = [...pick].reduce((a,i)=>a+INF[i].price,0);
-  app.innerHTML = `${header(t,3)}<h2>Najdi influencery pro Bataron</h2>
+  app.innerHTML = `${header(t)}<h2>Najdi influencery pro Bataron</h2>
   ${done ? result('influ', 'Správně jsou @gamer_tom a @foodie.linh za 27 000 Kč. Víc sledujících neznamená lepší výběr. Rozhoduje, kdo je sleduje a jestli reagují. Proč u každého profilu, najdeš níže.', sv.tries) :
   `<p class="lead">Cíl: aby Bataron poznali lidé 16 až 25 let v Česku, kteří studují nebo hrají do noci a chtějí rychlé jídlo. Vyber jeden nebo víc profilů a vejdi se do rozpočtu.</p>
   <div class="budget"><div class="nums"><span>Utraceno ${kc(spent)}</span><span>Rozpočet ${kc(BUDGET)}</span></div>
@@ -659,7 +659,7 @@ function tym(){
   while(sv.team.length<CAMPS.length){ sv.team.push([]); sv.checked.push(null) }
   const team = sv.team.map(a=>new Set(a)), done = isDone('tym'); if(!done) startClock(sv);
   const campOk = ci => CAMPS[ci].a.every(x=>team[ci].has(x)) && team[ci].size===CAMPS[ci].n;
-  app.innerHTML = `${header(t,4)}<h2>Jsi projektový manažer. Sestav týmy.</h2>
+  app.innerHTML = `${header(t)}<h2>Jsi projektový manažer. Sestav týmy.</h2>
   ${done ? result('tym', 'Všechny 4 týmy máš sestavené správně. Přesně takhle se v agentuře skládá tým na každou zakázku.', sv.tries) :
   `<p class="lead">Pro každou kampaň vyber lidi z agentury. Kolik jich potřebuješ, je napsané u kampaně. Ty jako projekťák jsi v každém týmu automaticky.</p>`}
   <details class="legend"><summary>Kdo co dělá</summary><br><div class="roles">${ROLES.map(r=>`<div class="role"><b>${r[1]}</b>${r[2]}</div>`).join('')}</div></details>
@@ -706,7 +706,7 @@ function kdo(){
   const match = sv.match, done = isDone('kdo'), okSet = new Set(sv.ok), badSet = new Set(sv.bad); if(!done) startClock(sv);
   const nameOf = id => CAST.find(c=>c[0]===id)[1];
   if(armed==null || match[armed]!=null || okSet.has(armed)){ const n = LINES.findIndex((l,i)=>match[i]==null); armed = n<0?null:n }
-  app.innerHTML = `${header(t,5)}<h2>Kdo to řekl?</h2>
+  app.innerHTML = `${header(t)}<h2>Kdo to řekl?</h2>
   ${done ? result('kdo', 'Všech 5 vět máš přiřazených správně. Teď víš, kdo v agentuře co řeší.', sv.tries) :
   `<p class="lead">Klepni na větu a pak dole na člověka, který ji na poradě nejspíš řekl. Jeden člověk je navíc.</p>
    ${badSet.size?warn(`${badSet.size===1?'Jedna věta nesedí':`${badSet.size} věty nesedí`}. Jsou označené červeně, přiřaď je znovu.`):''}`}
