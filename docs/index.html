@@ -209,6 +209,13 @@ body.tvmode{padding-block:16px}
 .tvgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
 @media (min-width:900px){.tvgrid{grid-template-columns:minmax(0,1fr) minmax(220px,24vw)}}
 .tvmain{display:grid;gap:14px;min-width:0}
+.barr{display:flex;align-items:center;gap:8px}
+.snd{background:none;border:2px solid #ffffff40;border-radius:999px;width:40px;height:40px;display:grid;place-items:center;color:#fff;padding:0}
+.snd svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tvsnd{background:var(--mag);color:#fff;border:0;border-radius:999px;padding:12px 20px;font:inherit;font-weight:800;display:inline-flex;gap:8px;align-items:center;justify-self:start}
+.tvsnd.on{background:#ffffff1f}
+.tvsnd svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tvtop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .tvqr{background:#fff;color:var(--navy);border-radius:12px;padding:18px;display:grid;justify-items:center;gap:6px;text-align:center}
 .tvqr b{font-family:var(--disp);font-weight:900;font-size:clamp(1.2rem,2vw,2rem)}
 .tvqr span{color:var(--muted)}
@@ -285,7 +292,7 @@ body.tvmode{padding-block:16px}
 </svg>
 
 <div class="wrap">
-  <div class="bar"><span class="logo">SHORT<span>PRO</span></span><span class="pts" id="pts">0 b</span></div>
+  <div class="bar"><span class="logo">SHORT<span>PRO</span></span><span class="barr"><button class="snd" id="snd" aria-label="Zvuk"></button><span class="pts" id="pts">0 b</span></span></div>
   <main id="app" class="screen" aria-live="polite"></main>
 </div>
 
@@ -351,14 +358,50 @@ function runClock(id){
     el.classList.toggle('out', left <= 0); el.classList.toggle('hurry', left > 0 && left <= 30) };
   tick(); clockTimer = setInterval(tick, 1000);
 }
+/* ---------- Zvuk: hlasové reakce v mobilu, hudba a hlasatel na TV ---------- */
+const SPK_ON = '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const SPK_OFF = '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+let sndOn = load('sp-snd', true);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+let voice = null;
+function say(id){ if(!sndOn || document.body.classList.contains('tvmode')) return;
+  try{ if(voice) voice.pause(); voice = new Audio('audio/cs/'+id+'.mp3'); voice.play().catch(()=>{}) }catch(e){} }
+function sndBtn(){ const b = $('#snd'); if(b){ b.innerHTML = sndOn ? SPK_ON : SPK_OFF; b.setAttribute('aria-label', sndOn ? 'Vypnout zvuk' : 'Zapnout zvuk') } }
+document.addEventListener('click', e=>{ if(e.target.closest('#snd')){ sndOn = !sndOn; save('sp-snd', sndOn); sndBtn(); if(sndOn) say(pick(['ok1','ok2'])) } });
+/* TV: hudba ve smyčce (Web Audio, bez mezery) + každých 45 s hlasatel, hudba se ztiší */
+const TV = {ctx:null, gain:null, src:null, on:false, timer:null, last:'', buf:null};
+const ANN = ['ann1','ann2','ann3','ann4','ann5','ann6','ann7','ann8'];
+async function tvStart(){
+  try{
+    TV.ctx = TV.ctx || new (window.AudioContext||window.webkitAudioContext)(); await TV.ctx.resume();
+    if(!TV.buf) TV.buf = await TV.ctx.decodeAudioData(await (await fetch('audio/hudba-loop.mp3')).arrayBuffer());
+    TV.gain = TV.ctx.createGain(); TV.gain.gain.value = .55; TV.gain.connect(TV.ctx.destination);
+    TV.src = TV.ctx.createBufferSource(); TV.src.buffer = TV.buf; TV.src.loop = true; TV.src.connect(TV.gain); TV.src.start();
+    TV.on = true; clearInterval(TV.timer); TV.timer = setInterval(tvAnnounce, 45000); setTimeout(tvAnnounce, 4000);
+  }catch(e){ TV.on = false }
+  tvBtn();
+}
+function tvStop(){ try{ TV.src && TV.src.stop() }catch(e){} TV.src = null; TV.on = false; clearInterval(TV.timer); tvBtn() }
+function tvAnnounce(){
+  if(!TV.on) return; let id; do{ id = pick(ANN) }while(id === TV.last); TV.last = id;
+  const g = TV.gain.gain, t = TV.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(.15, t+.6);
+  const a = new Audio('audio/cs/'+id+'.mp3'); a.volume = 1;
+  const up = ()=>{ const t2 = TV.ctx.currentTime; g.cancelScheduledValues(t2); g.setValueAtTime(g.value, t2); g.linearRampToValueAtTime(.55, t2+1.2) };
+  a.onended = up; a.onerror = up; setTimeout(()=>a.play().catch(up), 700);
+}
+function tvBtn(){ const b = $('#tvsnd'); if(!b) return; b.classList.toggle('on', TV.on); b.innerHTML = (TV.on ? SPK_ON+' Vypnout hudbu' : SPK_ON+' Zapnout hudbu a hlasatele') }
+document.addEventListener('click', e=>{ if(e.target.closest('#tvsnd')){ TV.on ? tvStop() : tvStart() } });
+
 function award(id, base){
   const secs = elapsed(id), bonus = base >= 100 ? Math.max(0, LIMIT[id] - secs) : 0;
   state.bonus = state.bonus || {}; state.secs = state.secs || {};
   state.bonus[id] = bonus; state.secs[id] = secs; clearInterval(clockTimer);
   setScore(id, base + bonus, secs); fx('win', 'Schváleno!');
+  say(TASKS.every(t=>isDone(t.id)) ? 'final' : id);
 }
 /* Animace dobře / špatně: overlay přes celou obrazovku, při dokončení konfety */
 function fx(kind, msg){
+  if(kind==='good') say(pick(['ok1','ok2','ok3'])); else if(kind==='bad') say(pick(['bad1','bad2','bad3']));
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){ return }
   document.querySelectorAll('.fx').forEach(n=>n.remove());
   const d = document.createElement('div'); d.className = 'fx fx-'+kind; d.setAttribute('aria-hidden','true');
@@ -677,25 +720,25 @@ async function zebricek(){
   if(SCORE_API){ try{ rows = await (await fetch(SCORE_API)).json() }catch(e){ rows = null } }
   if(!rows){ const b = load('sp-board', {}); rows = Object.entries(b).map(([nick,total])=>({nick,total})) }
   rows.sort((a,b)=>b.total-a.total);
-  app.innerHTML = `<div class="tv"><button class="back" data-go="">${ic('back')} Zpět do hry</button>
+  app.innerHTML = `<div class="tv"><div class="tvtop"><button class="back" data-go="">${ic('back')} Zpět do hry</button><button class="tvsnd" id="tvsnd"></button></div>
   <div class="tvgrid"><div class="tvmain"><div class="tvhead">${img('trofej',90)}<h1>Nejlepší marketéři dne</h1></div>
   <div class="board">${rows.length ? rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)}</span><span class="s">${r.total} b</span></div>`).join('')
     : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`}</div></div>
   <aside class="tvqr"><div class="qrbox">${QR_SVG}</div><b>Hraj taky</b><span>Naskenuj a splň 5 zakázek pro Bataron</span></aside></div>
   <p class="demo">${SCORE_API?'Obnovuje se každých 10 sekund.':'Zatím jen výsledky z tohoto zařízení.'}</p></div>`;
-  clearTimeout(boardTimer); boardTimer = setTimeout(()=>{ if(location.hash==='#zebricek') zebricek() }, 10000);
+  tvBtn(); clearTimeout(boardTimer); boardTimer = setTimeout(()=>{ if(location.hash==='#zebricek') zebricek() }, 10000);
 }
 
 /* ---------- Router ---------- */
 const ROUTES = {story, triky, influ, tym, kdo, zebricek};
 function route(){
   const h = location.hash.slice(1);
-  document.body.classList.remove('tvmode'); clearInterval(clockTimer);
+  document.body.classList.remove('tvmode'); clearInterval(clockTimer); if(h!=='zebricek' && TV.on) tvStop();
   if(ROUTES[h] && (state.nick || h==='zebricek')){ ROUTES[h](); if(LIMIT[h]) runClock(h) } else home();
   window.scrollTo(0,0);
 }
 document.addEventListener('click', e=>{ const g = e.target.closest('[data-go]'); if(!g || g.disabled) return; location.hash = g.dataset.go; if(!g.dataset.go) route() });
 addEventListener('hashchange', route);
-updPts(); route();
+updPts(); sndBtn(); route();
 </script>
 </body></html>

@@ -5,3 +5,4 @@ cd "$(dirname "$0")"
   cat index.html | sed '0,/<\/style>/s//<\/style><\/head><body>/'
   echo '</body></html>'; } > docs/index.html
 mkdir -p docs/img && cp img/*.webp docs/img/
+mkdir -p docs/audio/cs && cp audio/hudba-loop.mp3 docs/audio/ && cp audio/cs/*.mp3 docs/audio/cs/
