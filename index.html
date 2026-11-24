@@ -366,7 +366,7 @@ let voice = null;
 function say(id){ if(!sndOn || document.body.classList.contains('tvmode')) return;
   try{ if(voice) voice.pause(); voice = new Audio('audio/cs/'+id+'.mp3'); voice.play().catch(()=>{}) }catch(e){} }
 function sndBtn(){ const b = $('#snd'); if(b){ b.innerHTML = sndOn ? SPK_ON : SPK_OFF; b.setAttribute('aria-label', sndOn ? 'Vypnout zvuk' : 'Zapnout zvuk') } }
-document.addEventListener('click', e=>{ if(e.target.closest('#snd')){ sndOn = !sndOn; save('sp-snd', sndOn); sndBtn(); if(sndOn) say(pick(['ok1','ok2'])) } });
+document.addEventListener('click', e=>{ if(e.target.closest('#snd')){ sndOn = !sndOn; save('sp-snd', sndOn); sndBtn(); if(sndOn) say('q_ok1') } });
 /* TV: hudba ve smyčce (Web Audio, bez mezery) + každých 45 s hlasatel, hudba se ztiší */
 const TV = {ctx:null, gain:null, src:null, on:false, timer:null, last:'', buf:null};
 const ANN = ['ann1','ann2','ann3','ann4','ann5','ann6','ann7','ann8'];
@@ -399,8 +399,8 @@ function award(id, base){
   say(TASKS.every(t=>isDone(t.id)) ? 'final' : id);
 }
 /* Animace dobře / špatně: overlay přes celou obrazovku, při dokončení konfety */
-function fx(kind, msg){
-  if(kind==='good') say(pick(['ok1','ok2','ok3'])); else if(kind==='bad') say(pick(['bad1','bad2','bad3']));
+function fx(kind, msg, v){
+  if(v) say(v);
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){ return }
   document.querySelectorAll('.fx').forEach(n=>n.remove());
   const d = document.createElement('div'); d.className = 'fx fx-'+kind; d.setAttribute('aria-hidden','true');
@@ -504,7 +504,7 @@ function story(){
   $('#nexthook').onclick = ()=>{ hookI=(hookI+1)%HOOKS.length; const h=$('#hook'); h.style.transform='scale(.94)'; setTimeout(()=>{ h.textContent = HOOKS[hookI]; h.style.transform='' },120) };
   app.querySelectorAll('[data-chk]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.chk; sv.on[i]=!sv.on[i]; state.saved.story=sv; persist(); b.classList.toggle('on'); buzz(10) });
   const f = $('#pinf'); if(f) f.addEventListener('submit', e=>{ e.preventDefault();
-    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá dobrovolník.'; buzz([30,40,30]); fx('bad','Kód nesedí'); shake($('#pinf')); return }
+    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá dobrovolník.'; buzz([30,40,30]); fx('bad','Kód nesedí','pin_bad'); shake($('#pinf')); return }
     $('#pinwrap').hidden = true;
     $('#sres').innerHTML = result('story', txt, 1, true); toRes();
   });
@@ -567,8 +567,8 @@ function triky(){
   <div id="ex">${wrong.size?warn('To není ono. Zkus jinou odpověď.'):''}</div>`;
   app.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{
     const i = +b.dataset.o;
-    if(i !== Q.a){ sv.wrong.push(i); persist(); buzz([30,40,30]); fx('bad','To není ono'); triky(); shake(app.querySelector(`[data-o="${i}"]`)); return }
-    sv.att[sv.q] = sv.wrong.length + 1; persist(); buzz(20); fx('good','Správně!');
+    if(i !== Q.a){ sv.wrong.push(i); persist(); buzz([30,40,30]); fx('bad','To není ono', sv.wrong.length>1 ? 'bad2' : 'q_bad1'); triky(); shake(app.querySelector(`[data-o="${i}"]`)); return }
+    sv.att[sv.q] = sv.wrong.length + 1; persist(); buzz(20); fx('good','Správně!', pick(['q_ok1','q_ok2','q_ok3']));
     app.querySelectorAll('[data-o]').forEach(x=>{ x.disabled=true; if(+x.dataset.o===Q.a){ x.classList.add('ok'); x.querySelector('.mark').innerHTML = ic('check','') } });
     $('#ex').innerHTML = `<div class="explain y"><strong>Správně. ${Q.e[0]}</strong>${Q.e[1]}</div><br><button class="btn full" id="nq">${sv.q+1<TRICKS.length?'Další otázka':'Odevzdat klientovi'}</button>`;
     $('#nq').onclick = ()=>{ sv.q++; sv.wrong = []; persist(); triky(); window.scrollTo(0,0) };
@@ -618,7 +618,7 @@ function influ(){
     if(!bad && !missing){ sv.msg=''; persist(); result('influ','',sv.tries,true); influ(); window.scrollTo(0,0); return }
     sv.msg = bad ? 'Klient to vrátil: aspoň jeden vybraný profil se pro Bataron nehodí. Podívej se znovu na publikum, engagement a témata.'
                  : 'Klient to vrátil: dobrý začátek, ale za tenhle rozpočet se dá oslovit víc správných lidí.';
-    persist(); buzz([30,40,30]); fx('bad','Klient to vrátil'); influ(); window.scrollTo(0,0); shake(app.querySelector('.warnbox'));
+    persist(); buzz([30,40,30]); fx('bad','Klient to vrátil', sv.tries>2 ? 'bad3' : bad ? 'influ_bad' : 'influ_more'); influ(); window.scrollTo(0,0); shake(app.querySelector('.warnbox'));
   };
 }
 
@@ -657,7 +657,7 @@ function tym(){
   const s = $('#tsub'); if(s) s.onclick = ()=>{
     sv.tries++; sv.checked = CAMPS.map((c,ci)=>campOk(ci)); persist();
     if(sv.checked.every(Boolean)){ result('tym','',sv.tries,true); tym(); window.scrollTo(0,0); return }
-    buzz([30,40,30]); fx('bad','Ještě to nesedí'); tym(); app.querySelectorAll('.camp.wrong').forEach(shake); const w = app.querySelector('.camp.wrong'); if(w) w.scrollIntoView({behavior:'smooth', block:'center'});
+    buzz([30,40,30]); fx('bad','Ještě to nesedí', sv.tries>2 ? 'bad2' : 'tym_bad'); tym(); app.querySelectorAll('.camp.wrong').forEach(shake); const w = app.querySelector('.camp.wrong'); if(w) w.scrollIntoView({behavior:'smooth', block:'center'});
   };
 }
 
@@ -707,7 +707,7 @@ function kdo(){
     LINES.forEach((l,i)=>{ if(match[i]===l[1]) okSet.add(i); else { badSet.add(i); delete match[i] } });
     sv.ok=[...okSet]; sv.bad=[...badSet]; persist();
     if(okSet.size===LINES.length){ result('kdo','',sv.tries,true); kdo(); window.scrollTo(0,0); return }
-    buzz([30,40,30]); fx('bad','Ještě to nesedí'); armed = LINES.findIndex((l,i)=>match[i]==null); kdo(); window.scrollTo(0,0); app.querySelectorAll('.quote.bad').forEach(shake);
+    buzz([30,40,30]); fx('bad','Ještě to nesedí', sv.tries>2 ? 'bad2' : 'kdo_bad'); armed = LINES.findIndex((l,i)=>match[i]==null); kdo(); window.scrollTo(0,0); app.querySelectorAll('.quote.bad').forEach(shake);
   };
 }
 

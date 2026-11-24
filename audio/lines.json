@@ -20,5 +20,15 @@
 "influ": "[excited] Analytik jak má být! Klient je nadšený!",
 "tym": "[excited] Skvělý projekťák! Všechny týmy sedí!",
 "kdo": "[excited] Agenturní insider! Víš, kdo je kdo!",
-"final": "[excited] Wow! Všech pět zakázek hotových! Jsi marketér dne!"
+"final": "[excited] Wow! Všech pět zakázek hotových! Jsi marketér dne!",
+"q_ok1": "[excited] Správně!",
+"q_ok2": "[excited] Přesně tak, to je ono!",
+"q_ok3": "[excited] Paráda, tenhle trik znáš!",
+"q_bad1": "To není ono. Zkus jinou odpověď.",
+"q_bad2": "Skoro! Zkus jinou možnost.",
+"influ_bad": "Klient to vrátil. Podívej se znovu na publikum a engagement.",
+"influ_more": "Dobrý začátek! Ale za tenhle rozpočet zvládneš víc.",
+"tym_bad": "Tým ještě nesedí. Někdo chybí, nebo tam nepatří.",
+"kdo_bad": "Některá věta ještě nesedí. Zkus to znovu!",
+"pin_bad": "Kód nesedí. Ať ho zadá dobrovolník."
 }
