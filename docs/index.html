@@ -582,16 +582,17 @@ function influ(){
 
 /* ---------- 4 Tým ---------- */
 const ROLES = [
-  ['kam','Kameraman','natáčí záběry'],['her','Herečka','hraje ve videu'],['zvuk','Zvukař','hlídá zvuk při natáčení'],
-  ['str','Střihač','skládá záběry do videa'],['gra','Grafik','kreslí plakáty a bannery'],['copy','Copywriter','píše texty a slogany'],
-  ['inf','Influencer manažer','vybírá influencery a domlouvá spolupráci'],['perf','Performance specialista','nastavuje placené reklamy a hlídá prodeje'],
-  ['smm','Social media manažer','plánuje příspěvky a odpovídá na komentáře'],['uc','Účetní','vystavuje faktury'],
+  ['cc','Content creator','natáčí a stříhá krátká videa telefonem na TikTok a Reels'],['smm','Social media manažer','plánuje a zveřejňuje příspěvky a stories'],
+  ['comm','Community manažer','odpovídá na komentáře a zprávy, hlídá komunitu'],['ads','Ads manažer','nastavuje placené reklamy a hlídá rozpočet a výsledky'],
+  ['inf','Influencer manažer','vybírá influencery a domlouvá s nimi spolupráci'],['gra','Grafik','dělá vizuály, bannery a šablony'],
+  ['copy','Copywriter','píše texty, popisky a slogany'],['kam','Kameraman','natáčí profi kamerou ve studiu'],
+  ['her','Herečka','hraje v reklamním spotu'],['str','Střihač','skládá profi záběry do hotového spotu'],
 ];
 const CAMPS = [
-  {t:'Reklamní video na TikTok s herečkou', n:4, a:['kam','her','zvuk','str']},
-  {t:'Plakát a leták do večerek', n:2, a:['gra','copy']},
-  {t:'Kampaň s influencery za 50 000 Kč, vyhodnocená podle prodejů', n:2, a:['inf','perf']},
-  {t:'Ochutnávka Bataronu na festivalu: natočit a sestříhat aftermovie, navrhnout vizuál stánku, během akce sdílet stories a odpovídat na komentáře, placenou reklamou pozvat lidi z okolí', n:5, a:['kam','str','gra','smm','perf']},
+  {t:'Instagram a TikTok vietnamské restaurace: natočit videa jídel, naplánovat příspěvky na celý měsíc a pustit placenou reklamu lidem v okolí', n:3, a:['cc','smm','ads']},
+  {t:'Bataron s influencery: vybrat 5 tiktokerů, domluvit spolupráci a jejich videa podpořit placenou reklamou', n:2, a:['inf','ads']},
+  {t:'Profi reklamní spot na YouTube s herečkou, natáčí se ve studiu', n:3, a:['kam','her','str']},
+  {t:'Ochutnávka Bataronu na festivalu: natočit krátká videa na TikTok, navrhnout vizuál stánku, napsat slogan, živě zveřejňovat stories a odpovídat lidem v komentářích', n:5, a:['cc','gra','copy','smm','comm']},
 ];
 function tym(){
   const t = T('tym'), sv = state.saved.tym || (state.saved.tym = {team:CAMPS.map(()=>[]), tries:0, checked:CAMPS.map(()=>null)});
@@ -626,15 +627,16 @@ function sil(prop){
     copy:`<rect x="58" y="76" width="36" height="5" rx="2" transform="rotate(-35 77 78)" fill="#30E3CA"/>`,
     perf:`<path d="M58 98 L68 86 L76 92 L94 70" stroke="#30E3CA" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     inf:`<rect x="64" y="62" width="18" height="32" rx="4" fill="${N}"/><rect x="67" y="66" width="12" height="22" rx="2" fill="#30E3CA"/>`,
+    comm:`<path d="M58 66 h36 a4 4 0 0 1 4 4 v18 a4 4 0 0 1 -4 4 h-22 l-8 7 v-7 h-6 a4 4 0 0 1 -4 -4 v-18 a4 4 0 0 1 4 -4z" fill="#30E3CA"/><circle cx="68" cy="79" r="2.5" fill="${N}"/><circle cx="76" cy="79" r="2.5" fill="${N}"/><circle cx="84" cy="79" r="2.5" fill="${N}"/>`,
     gra:`<circle cx="76" cy="84" r="13" fill="${N}"/><circle cx="71" cy="80" r="3" fill="#30E3CA"/><circle cx="80" cy="79" r="3" fill="#D22A88"/><circle cx="78" cy="89" r="3" fill="#fff"/>`,
   }[prop];
   return `<svg viewBox="0 0 100 110" aria-hidden="true"><circle cx="50" cy="30" r="18" fill="${N}"/><path d="M16 108 q0 -48 34 -48 q34 0 34 48z" fill="${N}"/>${P}</svg>`;
 }
-const CAST = [['kam','Kameraman'],['pm','Projektový manažer'],['copy','Copywriter'],['perf','Performance specialista'],['inf','Influencer manažer'],['gra','Grafik']];
+const CAST = [['kam','Content creator'],['pm','Projektový manažer'],['comm','Community manažer'],['perf','Ads manažer'],['inf','Influencer manažer'],['copy','Copywriter']];
 const LINES = [
-  ['„Ten záběr je rozmazaný, točíme znovu.“','kam'],
+  ['„Ten záběr je rozmazaný, točím to znovu.“','kam'],
   ['„Deadline je v pátek v 10. Kdo nestíhá, ať se ozve hned.“','pm'],
-  ['„Ten hook je nuda, zkusím tři jiné věty.“','copy'],
+  ['„Pod videem je 300 komentářů, do večera na všechny odpovím.“','comm'],
   ['„Za reklamu jsme dali 5 000 Kč a přišlo 200 objednávek.“','perf'],
   ['„Tenhle creator má falešné sledující, nebereme ho.“','inf'],
 ];
