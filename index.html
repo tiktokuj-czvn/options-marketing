@@ -719,12 +719,16 @@ async function zebricek(){
   if(SCORE_API){ try{ rows = await (await fetch(SCORE_API)).json() }catch(e){ rows = null } }
   if(!rows){ const b = load('sp-board', {}); rows = Object.entries(b).map(([nick,total])=>({nick,total})) }
   rows.sort((a,b)=>b.total-a.total);
-  app.innerHTML = `<div class="tv"><div class="tvtop"><button class="back" data-go="">${ic('back')} Zpět do hry</button><button class="tvsnd" id="tvsnd"></button></div>
+  const boardHtml = rows.length ? rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)}</span><span class="s">${r.total} b</span></div>`).join('')
+    : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`;
+  const live = $('#tvboard');
+  if(live){ if(live.dataset.h !== boardHtml){ live.innerHTML = boardHtml; live.dataset.h = boardHtml } }
+  else { app.innerHTML = `<div class="tv"><div class="tvtop"><button class="back" data-go="">${ic('back')} Zpět do hry</button><button class="tvsnd" id="tvsnd"></button></div>
   <div class="tvgrid"><div class="tvmain"><div class="tvhead">${img('trofej',90)}<h1>Nejlepší marketéři dne</h1></div>
-  <div class="board">${rows.length ? rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)}</span><span class="s">${r.total} b</span></div>`).join('')
-    : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`}</div></div>
+  <div class="board" id="tvboard"></div></div>
   <aside class="tvqr"><div class="qrbox">${QR_SVG}</div><b>Hraj taky</b><span>Naskenuj a splň 5 zakázek pro Bataron</span></aside></div>
   <p class="demo">${SCORE_API?'Obnovuje se každých 10 sekund.':'Zatím jen výsledky z tohoto zařízení.'}</p></div>`;
+  const nb = $('#tvboard'); nb.innerHTML = boardHtml; nb.dataset.h = boardHtml }
   tvBtn(); clearTimeout(boardTimer); boardTimer = setTimeout(()=>{ if(location.hash==='#zebricek') zebricek() }, 10000);
 }
 
