@@ -181,6 +181,14 @@ details.legend summary{cursor:pointer;font-weight:700}
 .lb .r,.lb .s{font-family:var(--disp);font-weight:900}
 .lb.p1{background:var(--turq);color:var(--navy)}.lb.p2{background:#CFE0E6;color:var(--navy)}.lb.p3{background:#F3C2DD;color:var(--navy)}
 .lb.me{outline:3px solid var(--mag)}
+.lvl{display:inline-flex;align-items:center;gap:3px;font-family:var(--disp);font-weight:800;font-size:.72em;letter-spacing:.04em;text-transform:uppercase;border-radius:5px;padding:2px 7px;vertical-align:.12em;white-space:nowrap}
+.lvl-junior{background:#30E3CA33;color:inherit;border:1.5px solid var(--turq)}
+.lvl-medior{background:#16323F;color:#30E3CA;border:1.5px solid #30E3CA}
+.lvl-senior{background:var(--mag);color:#fff;border:1.5px solid var(--mag)}
+.lvl .star{width:1em;height:1em;fill:#FFD84D;stroke:none}
+.job .t small .lvl{display:inline-flex;font-size:.72rem;padding:1px 6px;margin-right:4px}
+.badge-name.extra{display:inline-flex;gap:6px;align-items:center;color:var(--mag)}
+.badge-name.extra .star{width:1.2em;height:1.2em;fill:var(--mag)}
 .demo{font-size:.85rem;color:#CFE0E6;text-align:center}
 .job:disabled{opacity:.45;cursor:not-allowed}
 .stamp.mid{color:var(--navy);border-color:var(--navy)}
@@ -327,8 +335,8 @@ function setScore(task, pts, secs){
   const before = total();
   state.scores[task] = pts; persist();
   countUp(before, total());
-  const board = load('sp-board', {}); board[state.nick] = total(); save('sp-board', board);
-  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts, secs})}).catch(()=>{});
+  const board = load('sp-board', {}); board[state.nick] = {total:total(), lvl:playerLvl(), star:seniorStar()}; save('sp-board', board);
+  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts, secs, first:((state.raw||{})[task]>=100)?1:0})}).catch(()=>{});
 }
 function updPts(){ $('#pts').textContent = total() + ' b' }
 function countUp(a, b){
@@ -338,11 +346,11 @@ function countUp(a, b){
 }
 
 const TASKS = [
-  {id:'story', pic:'i-cam', name:'Story pro Instagram', role:'Kreativa', time:'4 min', badge:'Kreativec'},
-  {id:'triky', pic:'i-bulb', name:'Prodejní triky', role:'Strategie', time:'3 min', badge:'Stratég'},
-  {id:'influ', pic:'i-influ', name:'Výběr influencera', role:'Analytika', time:'3 min', badge:'Analytik'},
-  {id:'tym', pic:'i-team', name:'Tým kampaně', role:'Projektové řízení', time:'4 min', badge:'Projekťák'},
-  {id:'kdo', pic:'i-chat', name:'Kdo to řekl?', role:'Porada v agentuře', time:'2 min', badge:'Agenturní insider'},
+  {id:'story', pic:'i-cam', name:'Story pro Instagram', role:'Kreativa', time:'4 min', badge:'Kreativec', lvl:'Junior'},
+  {id:'triky', pic:'i-bulb', name:'Prodejní triky', role:'Strategie', time:'3 min', badge:'Stratég', lvl:'Medior'},
+  {id:'influ', pic:'i-influ', name:'Výběr influencera', role:'Analytika', time:'3 min', badge:'Analytik', lvl:'Senior'},
+  {id:'tym', pic:'i-team', name:'Tým kampaně', role:'Projektové řízení', time:'4 min', badge:'Projekťák', lvl:'Senior'},
+  {id:'kdo', pic:'i-chat', name:'Kdo to řekl?', role:'Porada v agentuře', time:'2 min', badge:'Agenturní insider', lvl:'Junior'},
 ];
 const T = id => TASKS.find(t=>t.id===id);
 /* Čas: od prvního otevření úkolu. Při plném počtu bodů se zbývající sekundy připíšou jako bonus (David 23. 11.). */
@@ -394,9 +402,9 @@ document.addEventListener('click', e=>{ if(e.target.closest('#tvsnd')){ TV.on ? 
 
 function award(id, base){
   const secs = elapsed(id), bonus = base >= 100 ? Math.max(0, LIMIT[id] - secs) : 0;
-  state.bonus = state.bonus || {}; state.secs = state.secs || {};
-  state.bonus[id] = bonus; state.secs[id] = secs; clearInterval(clockTimer);
-  setScore(id, base + bonus, secs); fx('win', 'Schváleno!');
+  state.bonus = state.bonus || {}; state.secs = state.secs || {}; state.raw = state.raw || {};
+  state.bonus[id] = bonus; state.secs[id] = secs; state.raw[id] = base; clearInterval(clockTimer);
+  setScore(id, Math.round(base * MULT[T(id).lvl]) + bonus, secs); fx('win', 'Schváleno!');
   say(TASKS.every(t=>isDone(t.id)) ? 'final' : id);
 }
 /* Animace dobře / špatně: overlay přes celou obrazovku, při dokončení konfety */
@@ -410,6 +418,13 @@ function fx(kind, msg, v){
   document.body.appendChild(d);
   setTimeout(()=>d.remove(), kind==='win' ? 1600 : 900);
 }
+const MULT = {Junior:1, Medior:1.5, Senior:2};
+const STAR = '<svg class="star" viewBox="0 0 24 24" aria-label="Senior marketér"><path d="M12 2.5l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
+/* úroveň hráče: Junior = Story + Kdo, Medior = + kvíz, Senior = všech 5 */
+function playerLvl(sc = state.scores){ const d = id => sc[id] != null;
+  return TASKS.every(t=>d(t.id)) ? 'Senior' : d('story')&&d('kdo')&&d('triky') ? 'Medior' : d('story')&&d('kdo') ? 'Junior' : '' }
+const seniorStar = () => { const r = state.raw||{}; return r.influ>=100 && r.tym>=100 };
+const lvlTag = (l, star) => l ? `<span class="lvl lvl-${l.toLowerCase()}">${l}${star?STAR:''}</span>` : '';
 function shake(el){ if(!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake') }
 
 /* ---------- Domů ---------- */
@@ -420,7 +435,7 @@ function home(){
   app.innerHTML = `
   <div class="docbar"><span>Zakázky na dnes</span><span>28. 11. 2026</span></div>
   ${all ? `<section class="result"><div class="medal">${img('trofej',120)}</div><span class="bigstamp">HOTOVO</span><span class="big">${total()} b</span>
-      <p>Všech 5 zakázek pro Bataron je schválených a máš všech 5 odznaků. Mrkni, jak jsi na tom v žebříčku.</p>
+      <p>Všech 5 zakázek pro Bataron je schválených a máš všech 5 odznaků. Tvoje úroveň: ${lvlTag('Senior', seniorStar())}${seniorStar()?' a k tomu extra odznak Senior marketér':''}. Mrkni, jak jsi na tom v žebříčku.</p>
       <button class="btn full" data-go="zebricek">Ukaž žebříček</button></section>`
   : `<section class="client">
     <div class="k"><small>Klient: Bataron, batátové nudle</small>
@@ -434,7 +449,7 @@ function home(){
     const s = state.scores[t.id];
     return `<button class="job press ${s!=null?'done':''}" data-go="${t.id}" ${state.nick?'':'disabled'}>
       <span class="ic">${img(t.pic,48)}</span>
-      <span class="t"><b>${t.name}</b><small>${s!=null?`Odznak ${t.badge}`:`${t.role} · ${t.time}`}</small></span>
+      <span class="t"><b>${t.name}</b><small>${s!=null?`Odznak ${t.badge}`:`<b class="lvl lvl-${t.lvl.toLowerCase()}">${t.lvl}</b> ${100*MULT[t.lvl]} b · ${t.time}`}</small></span>
       ${s!=null?`<span class="stamp">${s} b</span>`:`<span class="go">Začít</span>`}</button>`}).join('')}</div>
   <button class="btn dark full" data-go="zebricek">Žebříček dne</button>`;
   bindNick(); tilt($('#herocup'));
@@ -459,17 +474,19 @@ function tilt(el){
   el.addEventListener('click', ()=>{ const D = window.DeviceOrientationEvent; if(D && D.requestPermission) D.requestPermission().then(r=>{ if(r==='granted') addEventListener('deviceorientation', onOri) }).catch(()=>{}) });
   if(window.DeviceOrientationEvent && !DeviceOrientationEvent.requestPermission) addEventListener('deviceorientation', onOri);
 }
-function header(t, n){ return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role}</span><span>Zakázka ${n} z 5</span></div>${isDone(t.id)?'':'<div class="clock" id="clock" aria-live="off"></div>'}` }
+function header(t, n){ return `<button class="back" data-go="">${ic('back')} Zakázky</button><div class="docbar"><span>${t.role} · ${t.lvl}</span><span>Zakázka ${n} z 5</span></div>${isDone(t.id)?'':'<div class="clock" id="clock" aria-live="off"></div>'}` }
 /* výsledek: vždy až po 100 % správně; fresh = právě dokončeno */
 function result(task, text, tries, fresh){
   const t = T(task);
   if(fresh){ award(task, task==='story'?100:triesPts(tries)); buzz([20,40,30]) }
   const pts = state.scores[task], bonus = (state.bonus||{})[task] || 0, base = pts - bonus, secs = (state.secs||{})[task];
+  const raw = (state.raw||{})[task] ?? base, lv = `${t.lvl} úroveň${MULT[t.lvl]>1?` (body ×${String(MULT[t.lvl]).replace('.',',')})`:''}`;
+  const starNow = fresh && (task==='influ'||task==='tym') && seniorStar();
   return `<div class="result" id="res"><div class="medal">${img(t.pic,96)}</div>
   <span class="bigstamp">SCHVÁLENO</span>
-  <span class="badge-name">Odznak: ${t.badge}</span>
+  <span class="badge-name">Odznak: ${t.badge}</span>${starNow?`<span class="badge-name extra">${STAR} Extra odznak: Senior marketér</span>`:''}
   <span class="big">${pts} b</span>
-  <p class="tries">${bonus ? `Za správnost ${base} b + bonus za rychlost ${bonus} b (hotovo za ${mmss(secs||0)}).` : base>=100 ? `Za správnost ${base} b. Bonus za rychlost už vypršel.` : `Za správnost ${base} b. Bonus za rychlost je jen za výsledek bez chyby.`}</p>
+  <p class="tries">${lv}. ${bonus ? `Za správnost ${base} b + bonus za rychlost ${bonus} b (hotovo za ${mmss(secs||0)}).` : raw>=100 ? `Za správnost ${base} b. Bonus za rychlost už vypršel.` : `Za správnost ${base} b. Bonus za rychlost je jen za výsledek bez chyby.`}</p>
   <p>${text}</p>
   ${task!=='story'?`<p class="tries">${tries===1?'Napoprvé, bez jediné chyby.':`Zvládnuto na ${tries}. pokus. Čím méně pokusů, tím víc bodů.`}</p>`:''}
   <p>Ukaž tuhle obrazovku dobrovolníkovi a vyzvedni si razítko v aplikaci Options.</p>
@@ -718,9 +735,9 @@ async function zebricek(){
   document.body.classList.add('tvmode');
   let rows = null;
   if(SCORE_API){ try{ rows = await (await fetch(SCORE_API)).json() }catch(e){ rows = null } }
-  if(!rows){ const b = load('sp-board', {}); rows = Object.entries(b).map(([nick,total])=>({nick,total})) }
+  if(!rows){ const b = load('sp-board', {}); rows = Object.entries(b).map(([nick,v])=>typeof v==='number' ? {nick,total:v} : {nick,...v}) }
   rows.sort((a,b)=>b.total-a.total);
-  const boardHtml = rows.length ? rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)}</span><span class="s">${r.total} b</span></div>`).join('')
+  const boardHtml = rows.length ? rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)} ${lvlTag(r.lvl, r.star)}</span><span class="s">${r.total} b</span></div>`).join('')
     : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`;
   const live = $('#tvboard');
   if(live){ if(live.dataset.h !== boardHtml){ live.innerHTML = boardHtml; live.dataset.h = boardHtml } }
