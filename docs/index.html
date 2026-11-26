@@ -34,7 +34,8 @@ svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .lead{color:var(--muted)}
 .who{display:grid;gap:6px;justify-items:start}
 .rules{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
-.rules summary{font-family:var(--disp);font-weight:800;cursor:pointer;color:var(--navy)}
+.rules .rt{font-family:var(--disp);font-weight:800;color:var(--navy)}
+.rules summary{font-weight:700;cursor:pointer;color:var(--navy);margin-top:6px;font-size:.93rem}
 .rules ul{margin:10px 0 2px;padding-left:18px;display:grid;gap:6px;font-size:.95rem;line-height:1.4}
 .rules .star{width:1em;height:1em;vertical-align:-2px;fill:#F5B700}
 .out{border:0;background:none;padding:6px 0;font:inherit;font-size:.92rem;color:var(--navy);text-decoration:underline;text-underline-offset:3px}
@@ -452,15 +453,16 @@ function home(){
     <div class="progress" style="grid-column:1/-1" aria-label="Hotovo ${done} z 5">${TASKS.map(t=>`<i class="${isDone(t.id)?'on':''}"></i>`).join('')}</div>
   </section>`}
   ${state.nick ? `<div class="who"><p class="lead">Pracuješ jako <b>${esc(state.nick)}</b>. Pořadí zakázek je na tobě.</p><button class="out" id="out" type="button">Nejsi ${esc(state.nick)}? Odhlásit</button></div>` : nickForm(pending)}
-  <details class="rules" ${state.nick?'':'open'}><summary>Pravidla a body</summary><ul>
-    <li><b>5 zakázek</b> v libovolném pořadí. Doporučujeme od Junior po Senior.</li>
+  <div class="rules"><b class="rt">Pravidla</b><ul>
+    <li><b>5 zakázek</b> v libovolném pořadí, nejlépe od Junior po Senior.</li>
     <li><b>Body za úroveň:</b> Junior 100, Medior 150, Senior 200.</li>
-    <li><b>Časový bonus:</b> každá ušetřená sekunda z limitu = 1 bod navíc.</li>
-    <li><b>Napoprvé bez chyby</b> = plné body i bonus. Po chybě to zkusíš znovu, ale dostaneš méně bodů a bonus ne.</li>
+    <li><b>Časový bonus:</b> každá ušetřená sekunda = 1 bod navíc.</li>
+  </ul><details><summary>Víc o bodech a odznacích</summary><ul>
+    <li><b>Napoprvé bez chyby</b> = plné body i bonus. Po chybě méně bodů a bez bonusu.</li>
     <li><b>Tvoje úroveň:</b> Story a Kdo to řekl = Junior, k tomu Triky = Medior, všech 5 = Senior.</li>
     <li><b>Extra odznak Senior marketér</b> ${STAR} za Influencery i Tým napoprvé bez chyby.</li>
-    <li><b>Žebříček dne</b> sčítá body ze všech zakázek. Ukaž výsledky dobrovolníkovi a dostaneš razítko v aplikaci Options.</li>
-  </ul></details>
+    <li><b>Žebříček dne</b> sčítá body ze všech zakázek.</li>
+  </ul></details></div>
   <div class="jobs">${TASKS.map(t=>{
     const s = state.scores[t.id];
     return `<button class="job press ${s!=null?'done':''}" data-go="${t.id}" ${state.nick?'':'disabled'}>
