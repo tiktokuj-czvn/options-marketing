@@ -4,9 +4,11 @@
 // List „Body“: datum, přezdívka, úkol, body, sekundy, napoprvé bez chyby (1/0)
 function sheet_(){ const ss = SpreadsheetApp.getActive(); return ss.getSheetByName('Body') || ss.insertSheet('Body'); }
 const TASKS_ = ['story','triky','influ','tym','kdo'];
+// Strop bodů za úkol = 100 × násobek úrovně + časový bonus (limit v sekundách), víc se ve hře získat nedá.
+const CAP_ = {story:340, kdo:220, triky:330, influ:380, tym:440};
 function doPost(e){
   const d = JSON.parse(e.postData.contents);
-  const nick = String(d.nick||"").slice(0,18), task = String(d.task||"").slice(0,10), pts = Math.max(0, Math.min(600, Number(d.points)||0)), secs = Math.max(0, Number(d.secs)||0), first = d.first ? 1 : 0;
+  const nick = String(d.nick||"").slice(0,18), task = String(d.task||"").slice(0,10), pts = Math.max(0, Math.min(CAP_[task]||0, Number(d.points)||0)), secs = Math.max(0, Number(d.secs)||0), first = d.first ? 1 : 0;
   if(!nick || TASKS_.indexOf(task) < 0) return ContentService.createTextOutput('bad');
   sheet_().appendRow([new Date(), nick, task, pts, secs, first]);
   return ContentService.createTextOutput('ok');
