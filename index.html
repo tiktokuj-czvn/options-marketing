@@ -319,7 +319,7 @@ body.tvmode{padding-block:16px}
 <script>
 /* SCORE_API = URL Google Apps Script webové aplikace pro společný žebříček.
    POST (text/plain JSON {nick,task,points}) zapíše body, GET vrátí [{nick,total}]. Prázdné = jen toto zařízení.
-   STORY_PIN = kód, který zadá dobrovolník u Story.
+   STORY_PIN = kód, který zadá člověk u stánku ShortPRO u Story.
    Princip (David 23. 11.): hra neprozrazuje správné odpovědi. Řekne jen, že je něco špatně (u týmu a Kdo to řekl i kde),
    student opravuje, dokud nemá 100 %. Pak SCHVÁLENO a odznak. Body do žebříčku podle počtu pokusů. */
 const SCORE_API = 'https://script.google.com/macros/s/AKfycbyn7UJGoapp4lTo7meDoIHaIRbkOIoINp63Up3FbuGwIK7Ee0_PAj59MxR24Z9Xll2T/exec';
@@ -520,7 +520,7 @@ function result(task, text, tries, fresh){
   <p class="tries">${lv}. ${bonus ? `Za správnost ${base} b + bonus za rychlost ${bonus} b (hotovo za ${mmss(secs||0)}).` : raw>=100 ? `Za správnost ${base} b. Bonus za rychlost už vypršel.` : `Za správnost ${base} b. Bonus za rychlost je jen za výsledek bez chyby.`}</p>
   <p>${text}</p>
   ${task!=='story'?`<p class="tries">${tries===1?'Napoprvé, bez jediné chyby.':`Zvládnuto na ${tries}. pokus. Čím méně pokusů, tím víc bodů.`}</p>`:''}
-  <p>Ukaž tuhle obrazovku dobrovolníkovi a vyzvedni si razítko v aplikaci Options.</p>
+  <p>Ukaž tuhle obrazovku u stánku ShortPRO a vyzvedni si razítko v aplikaci Options.</p>
   <button class="btn full" data-go="">Další zakázka</button></div>`;
 }
 const toRes = () => { const r = $('#res'); if(r) r.scrollIntoView({behavior:'smooth', block:'center'}) };
@@ -533,9 +533,9 @@ let hookI = 0;
 function story(){
   const t = T('story'), sv = state.saved.story || (state.saved.story = {on:[]}), done = isDone('story'); if(!done) startClock(sv);
   const txt = 'Přesně tohle dělá každý den náš kreativní tým: hook, produkt, důvod ke koupi a označení.';
-  app.innerHTML = `${header(t)}<h2>Natoč Story, které zastaví palec</h2>
+  app.innerHTML = `${header(t)}<h2>Natoč Story, u které nikdo nepřescrolluje</h2>
   ${done ? result('story', txt, 1) : ''}
-  <p class="lead">Jsi tvůrce obsahu pro Bataron. Vezmi si kelímek ze stolu a natoč Story do 15 sekund. Stačí jeden záběr nebo tři krátké.</p>
+  <p class="lead">Jsi tvůrce obsahu pro Bataron. Vezmi si kelímek ze stolu a natoč Story. Stačí jedno video do 15 sekund.</p>
   <div class="phone"><div class="bars"><i></i><i></i><i></i></div>
     <div class="hook" id="hook">${HOOKS[hookI]}</div>
     <div class="cupwrap" id="storycup">${img('cup-open',190,'photo')}</div>
@@ -545,15 +545,15 @@ function story(){
   <div class="checks">${STORY_CHECKS.map((c,i)=>`<button class="check press ${sv.on[i]?'on':''}" data-chk="${i}" ${done?'disabled':''}><span class="box">${ic('check','')}</span><span>${c}</span></button>`).join('')}</div>
   <p class="hint">Nemáš Instagram nebo nechceš nic zveřejňovat? Natoč video jen do mobilu a ukaž ho. Počítá se to taky.</p>
   <div id="pinwrap" class="screen" ${done?'hidden':''}>
-    <h3>Ukaž Story dobrovolníkovi</h3>
-    <p class="hint">Dobrovolník zkontroluje všechny 4 body ze seznamu. Když něco chybí, Story uprav a ukaž znovu.</p>
-    <form class="pin" id="pinf"><input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="Kód dobrovolníka"><button class="btn">Potvrdit</button></form>
+    <h3>Ukaž Story u stánku ShortPRO</h3>
+    <p class="hint">U stánku zkontrolujeme všechny 4 body ze seznamu. Když něco chybí, Story uprav a ukaž znovu.</p>
+    <form class="pin" id="pinf"><input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="Kód od stánku ShortPRO"><button class="btn">Potvrdit</button></form>
     <span class="err" id="pinerr"></span></div>
   <div id="sres"></div>`;
   $('#nexthook').onclick = ()=>{ hookI=(hookI+1)%HOOKS.length; const h=$('#hook'); h.style.transform='scale(.94)'; setTimeout(()=>{ h.textContent = HOOKS[hookI]; h.style.transform='' },120) };
   app.querySelectorAll('[data-chk]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.chk; sv.on[i]=!sv.on[i]; state.saved.story=sv; persist(); b.classList.toggle('on'); buzz(10) });
   const f = $('#pinf'); if(f) f.addEventListener('submit', e=>{ e.preventDefault();
-    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá dobrovolník.'; buzz([30,40,30]); fx('bad','Kód nesedí','pin_bad'); shake($('#pinf')); return }
+    if($('#pin').value !== STORY_PIN){ $('#pinerr').textContent = 'Kód nesedí. Ať ho zadá někdo od stánku ShortPRO.'; buzz([30,40,30]); fx('bad','Kód nesedí','pin_bad'); shake($('#pinf')); return }
     $('#pinwrap').hidden = true;
     $('#sres').innerHTML = result('story', txt, 1, true); toRes();
   });
