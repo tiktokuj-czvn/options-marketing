@@ -32,6 +32,11 @@ svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .screen{display:grid;gap:18px}
 .lead{color:var(--muted)}
 .who{display:grid;gap:6px;justify-items:start}
+.adm{display:grid;gap:12px}.adm h3{margin-top:6px}.arow{display:flex;gap:8px;flex-wrap:wrap}
+.alist{display:grid;gap:6px}.ap{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.ap.off{opacity:.5}.ap.off b{text-decoration:line-through}.btn.sm{padding:7px 12px;font-size:.9rem}.btn.sure{background:#B3261E}
+.aset{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.aset select,.aset input{font:inherit;max-width:55%}
 .rules{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
 .rules .rt{font-family:var(--disp);font-weight:800;color:var(--navy)}
 .rules summary{font-weight:700;cursor:pointer;color:var(--navy);margin-top:6px;font-size:.93rem}
@@ -385,23 +390,24 @@ function sndBtn(){ const b = $('#snd'); if(b){ b.innerHTML = sndOn ? SPK_ON : SP
 document.addEventListener('click', e=>{ if(e.target.closest('#snd')){ sndOn = !sndOn; save('sp-snd', sndOn); sndBtn(); if(sndOn) say('q_ok1') } });
 /* TV: hudba ve smyčce (Web Audio, bez mezery) + každých 45 s hlasatel, hudba se ztiší */
 const TV = {ctx:null, gain:null, src:null, on:false, timer:null, last:'', buf:null};
+const TVSET = Object.assign({vol:.55, ann:45, rows:10}, load('sp-tv', {}));
 const ANN = ['ann1','ann2','ann3','ann4','ann5','ann6','ann7','ann8'];
 async function tvStart(){
   try{
     TV.ctx = TV.ctx || new (window.AudioContext||window.webkitAudioContext)(); await TV.ctx.resume();
     if(!TV.buf) TV.buf = await TV.ctx.decodeAudioData(await (await fetch('audio/hudba-loop.mp3')).arrayBuffer());
-    TV.gain = TV.ctx.createGain(); TV.gain.gain.value = .55; TV.gain.connect(TV.ctx.destination);
+    TV.gain = TV.ctx.createGain(); TV.gain.gain.value = TVSET.vol; TV.gain.connect(TV.ctx.destination);
     TV.src = TV.ctx.createBufferSource(); TV.src.buffer = TV.buf; TV.src.loop = true; TV.src.connect(TV.gain); TV.src.start();
-    TV.on = true; clearInterval(TV.timer); TV.timer = setInterval(tvAnnounce, 45000); setTimeout(tvAnnounce, 4000);
+    TV.on = true; clearInterval(TV.timer); if(TVSET.ann){ TV.timer = setInterval(tvAnnounce, TVSET.ann*1000); setTimeout(tvAnnounce, 4000) }
   }catch(e){ TV.on = false }
   tvBtn();
 }
 function tvStop(){ try{ TV.src && TV.src.stop() }catch(e){} TV.src = null; TV.on = false; clearInterval(TV.timer); tvBtn() }
 function tvAnnounce(){
   if(!TV.on) return; let id; do{ id = pick(ANN) }while(id === TV.last); TV.last = id;
-  const g = TV.gain.gain, t = TV.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(.15, t+.6);
+  const g = TV.gain.gain, t = TV.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(Math.min(.15,TVSET.vol), t+.6);
   const a = new Audio('audio/cs/'+id+'.mp3'); a.volume = 1;
-  const up = ()=>{ const t2 = TV.ctx.currentTime; g.cancelScheduledValues(t2); g.setValueAtTime(g.value, t2); g.linearRampToValueAtTime(.55, t2+1.2) };
+  const up = ()=>{ const t2 = TV.ctx.currentTime; g.cancelScheduledValues(t2); g.setValueAtTime(g.value, t2); g.linearRampToValueAtTime(TVSET.vol, t2+1.2) };
   a.onended = up; a.onerror = up; setTimeout(()=>a.play().catch(up), 700);
 }
 function tvBtn(){ const b = $('#tvsnd'); if(!b) return; b.classList.toggle('on', TV.on); b.innerHTML = (TV.on ? SPK_ON+' Vypnout hudbu' : SPK_ON+' Zapnout hudbu a hlasatele') }
@@ -762,7 +768,7 @@ async function zebricek(){
   if(SCORE_API){ try{ rows = await (await fetch(SCORE_API)).json() }catch(e){ rows = null } }
   if(!rows){ const b = load('sp-board', {}); rows = Object.entries(b).map(([nick,v])=>typeof v==='number' ? {nick,total:v} : {nick,...v}) }
   rows.sort((a,b)=>b.total-a.total);
-  const boardHtml = rows.length ? rows.slice(0,10).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)} ${lvlTag(r.lvl, r.star)}</span><span class="s">${r.total} b</span></div>`).join('')
+  const boardHtml = rows.length ? rows.slice(0,TVSET.rows).map((r,i)=>`<div class="lb ${i<3?'p'+(i+1):''} ${r.nick===state.nick?'me':''}"><span class="r">${i+1}.</span><span class="nm">${esc(r.nick)} ${lvlTag(r.lvl, r.star)}</span><span class="s">${r.total} b</span></div>`).join('')
     : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`;
   const live = $('#tvboard');
   if(live){ if(live.dataset.h !== boardHtml){ live.innerHTML = boardHtml; live.dataset.h = boardHtml } }
@@ -775,12 +781,57 @@ async function zebricek(){
   tvBtn(); clearTimeout(boardTimer); boardTimer = setTimeout(()=>{ if(location.hash==='#zebricek') zebricek() }, 10000);
 }
 
+
+/* ---------- Správa (#admin): kód správce ověřuje jen Apps Script (ADMIN_KEY ve vlastnostech skriptu) ---------- */
+let adminKey = ''; try{ adminKey = sessionStorage.getItem('sp-admin') || '' }catch(e){}
+async function adminCall(action, nick){
+  const r = await fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({admin:adminKey, action, nick})});
+  return r.json();
+}
+async function admin(){
+  const tvset = `<h3>Monitor u stánku (jen toto zařízení)</h3>
+    <label class="aset">Hlasitost hudby <input type="range" id="a-vol" min="0" max="1" step=".05" value="${TVSET.vol}"></label>
+    <label class="aset">Hlasatel <select id="a-ann">${[[0,'vypnutý'],[30,'každých 30 s'],[45,'každých 45 s'],[60,'každou minutu'],[90,'každých 90 s']].map(([v,l])=>`<option value="${v}" ${TVSET.ann==v?'selected':''}>${l}</option>`).join('')}</select></label>
+    <label class="aset">Řádků v žebříčku <select id="a-rows">${[10,15,20].map(v=>`<option ${TVSET.rows==v?'selected':''}>${v}</option>`).join('')}</select></label>`;
+  if(!SCORE_API){ app.innerHTML = `<div class="adm"><h1>Správa</h1><p class="hint">Společný žebříček není zapnutý.</p>${tvset}</div>`; bindTvset(); return }
+  if(!adminKey){
+    app.innerHTML = `<div class="adm"><h1>Správa žebříčku</h1><form class="pin" id="admf"><input id="admk" type="password" autocomplete="off" placeholder="Kód správce" aria-label="Kód správce"><button class="btn">Vstoupit</button></form><span class="err" id="admerr"></span>${tvset}</div>`;
+    bindTvset();
+    $('#admf').addEventListener('submit', async e=>{ e.preventDefault(); adminKey = $('#admk').value.trim(); $('#admerr').textContent = 'Ověřuji…';
+      try{ const r = await adminCall('list'); if(!r.ok) throw 0; try{ sessionStorage.setItem('sp-admin', adminKey) }catch(e){} admin() }
+      catch(err){ adminKey = ''; $('#admerr').textContent = 'Kód nesedí.' } });
+    return;
+  }
+  app.innerHTML = `<div class="adm"><h1>Správa žebříčku</h1><p class="hint" id="admst">Načítám…</p></div>`;
+  let r; try{ r = await adminCall('list') }catch(e){ r = null }
+  if(!r || !r.ok){ adminKey = ''; try{ sessionStorage.removeItem('sp-admin') }catch(e){} return admin() }
+  const pl = r.players || [];
+  app.innerHTML = `<div class="adm"><h1>Správa žebříčku</h1>
+    <p class="hint">Nic se nemaže. Data zůstávají v tabulce a každý krok jde vrátit.${r.resetAt?` Vyčištěno ${new Date(r.resetAt).toLocaleString('cs-CZ')}.`:''}</p>
+    <div class="arow"><button class="btn" id="a-reset">Vyčistit žebříček</button><button class="btn ghost" id="a-undo">Vrátit poslední vyčištění</button></div>
+    <h3>Hráči (${pl.length})</h3>
+    <div class="alist">${pl.length ? pl.map(p=>`<div class="ap ${p.hidden?'off':''}"><span><b>${esc(p.nick)}</b> ${lvlTag(p.lvl,p.star)}</span><span>${p.total} b</span><button class="btn ghost sm" data-a="${p.hidden?'unhide':'hide'}" data-n="${esc(p.nick)}">${p.hidden?'Vrátit':'Skrýt'}</button></div>`).join('') : '<p class="hint">Zatím nikdo.</p>'}</div>
+    ${tvset}
+    <div class="arow"><button class="btn dark" data-go="zebricek">Na žebříček</button><button class="btn ghost" id="a-out">Odhlásit správce</button></div></div>`;
+  bindTvset();
+  const act = async (a, n) => { $('.adm h1').textContent = 'Ukládám…'; try{ await adminCall(a, n) }catch(e){} admin() };
+  app.querySelectorAll('[data-a]').forEach(b => b.onclick = () => act(b.dataset.a, b.dataset.n));
+  const rb = $('#a-reset'); rb.onclick = () => { if(!rb.classList.contains('sure')){ rb.classList.add('sure'); rb.textContent = 'Opravdu? Klepni znovu'; return } act('reset') };
+  $('#a-undo').onclick = () => act('undo');
+  $('#a-out').onclick = () => { adminKey = ''; try{ sessionStorage.removeItem('sp-admin') }catch(e){} location.hash = ''; };
+}
+function bindTvset(){
+  const sv = () => save('sp-tv', TVSET);
+  const v = $('#a-vol'); if(v) v.oninput = () => { TVSET.vol = +v.value; sv(); if(TV.gain) TV.gain.gain.value = TVSET.vol };
+  const a = $('#a-ann'); if(a) a.onchange = () => { TVSET.ann = +a.value; sv() };
+  const w = $('#a-rows'); if(w) w.onchange = () => { TVSET.rows = +w.value; sv() };
+}
 /* ---------- Router ---------- */
-const ROUTES = {story, triky, influ, tym, kdo, zebricek};
+const ROUTES = {story, triky, influ, tym, kdo, zebricek, admin};
 function route(){
   const h = location.hash.slice(1);
   document.body.classList.remove('tvmode'); clearInterval(clockTimer); if(h!=='zebricek' && TV.on) tvStop();
-  if(ROUTES[h] && (state.nick || h==='zebricek')){ ROUTES[h](); if(LIMIT[h]) runClock(h) } else home();
+  if(ROUTES[h] && (state.nick || h==='zebricek' || h==='admin')){ ROUTES[h](); if(LIMIT[h]) runClock(h) } else home();
   window.scrollTo(0,0);
 }
 document.addEventListener('click', e=>{ const g = e.target.closest('[data-go]'); if(!g || g.disabled) return; location.hash = g.dataset.go; if(!g.dataset.go) route() });
