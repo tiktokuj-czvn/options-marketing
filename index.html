@@ -234,6 +234,7 @@ body.tvmode{padding-block:16px}
 .snd svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .tvsnd{background:var(--mag);color:#fff;border:0;border-radius:999px;padding:12px 20px;font:inherit;font-weight:800;display:inline-flex;gap:8px;align-items:center;justify-self:start}
 .tvsnd.on{background:#ffffff1f}
+.tvbtns{display:flex;gap:10px;flex-wrap:wrap}
 .tvsnd svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .tvtop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .tvqr{background:#fff;color:var(--navy);border-radius:12px;padding:18px;display:grid;justify-items:center;gap:6px;text-align:center}
@@ -312,7 +313,7 @@ body.tvmode{padding-block:16px}
 </svg>
 
 <div class="wrap">
-  <div class="bar"><span class="logo">SHORT<span>PRO</span></span><span class="barr"><button class="snd" id="snd" aria-label="Zvuk"></button><span class="pts" id="pts">0 b</span></span></div>
+  <div class="bar"><span class="logo">SHORT<span>PRO</span></span><span class="barr"><button class="snd fsbtn" id="fs" type="button" aria-label="Celá obrazovka"></button><button class="snd" id="snd" aria-label="Zvuk"></button><span class="pts" id="pts">0 b</span></span></div>
   <main id="app" class="screen" aria-live="polite"></main>
 </div>
 
@@ -366,7 +367,7 @@ const TASKS = [
 ];
 const T = id => TASKS.find(t=>t.id===id);
 /* Čas: od prvního otevření úkolu. Při plném počtu bodů se zbývající sekundy připíšou jako bonus (David 23. 11.). */
-const LIMIT = {story:240, triky:180, influ:180, tym:240, kdo:120};
+const LIMIT = {story:300, triky:240, influ:240, tym:300, kdo:180};
 let clockTimer = null;
 function startClock(sv){ if(!sv.start){ sv.start = Date.now(); persist() } }
 const elapsed = id => Math.round((Date.now() - ((state.saved[id]||{}).start || Date.now()))/1000);
@@ -386,6 +387,15 @@ const pick = a => a[Math.floor(Math.random()*a.length)];
 let voice = null;
 function say(id){ if(!sndOn || document.body.classList.contains('tvmode')) return;
   try{ if(voice) voice.pause(); voice = new Audio('audio/cs/'+id+'.mp3'); voice.play().catch(()=>{}) }catch(e){} }
+const FS_ON = '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>', FS_OFF = '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+const fsOk = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+function fsBtn(){ document.querySelectorAll('.fsbtn').forEach(b=>{ b.hidden = !fsOk; const on = !!fsEl();
+  b.innerHTML = b.id==='tvfs' ? (on ? FS_OFF+' Zmenšit' : FS_ON+' Celá obrazovka') : (on ? FS_OFF : FS_ON);
+  b.setAttribute('aria-label', on ? 'Ukončit celou obrazovku' : 'Celá obrazovka') }) }
+document.addEventListener('click', e=>{ if(!e.target.closest('.fsbtn')) return; const d = document, el = d.documentElement;
+  try{ if(fsEl()) (d.exitFullscreen || d.webkitExitFullscreen).call(d); else { const r = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if(r && r.catch) r.catch(()=>{}) } }catch(err){} });
+document.addEventListener('fullscreenchange', fsBtn); document.addEventListener('webkitfullscreenchange', fsBtn);
 function sndBtn(){ const b = $('#snd'); if(b){ b.innerHTML = sndOn ? SPK_ON : SPK_OFF; b.setAttribute('aria-label', sndOn ? 'Vypnout zvuk' : 'Zapnout zvuk') } }
 document.addEventListener('click', e=>{ if(e.target.closest('#snd')){ sndOn = !sndOn; save('sp-snd', sndOn); sndBtn(); if(sndOn) say('q_ok1') } });
 /* TV: hudba ve smyčce (Web Audio, bez mezery) + každých 45 s hlasatel, hudba se ztiší */
@@ -772,13 +782,13 @@ async function zebricek(){
     : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`;
   const live = $('#tvboard');
   if(live){ if(live.dataset.h !== boardHtml){ live.innerHTML = boardHtml; live.dataset.h = boardHtml } }
-  else { app.innerHTML = `<div class="tv"><div class="tvtop"><button class="back" data-go="">${ic('back')} Zpět do hry</button><button class="tvsnd" id="tvsnd"></button></div>
+  else { app.innerHTML = `<div class="tv"><div class="tvtop"><button class="back" data-go="">${ic('back')} Zpět do hry</button><span class="tvbtns"><button class="tvsnd fsbtn" id="tvfs" type="button"></button><button class="tvsnd" id="tvsnd"></button></span></div>
   <div class="tvgrid"><div class="tvmain"><div class="tvhead">${img('trofej',90)}<h1>Nejlepší marketéři dne</h1></div>
   <div class="board" id="tvboard"></div></div>
   <aside class="tvqr"><div class="qrbox">${QR_SVG}</div><b>Hraj taky</b><span>Naskenuj a splň 5 zakázek pro Bataron</span></aside></div>
   <p class="demo">${SCORE_API?'Obnovuje se každých 10 sekund.':'Zatím jen výsledky z tohoto zařízení.'}</p></div>`;
   const nb = $('#tvboard'); nb.innerHTML = boardHtml; nb.dataset.h = boardHtml }
-  tvBtn(); clearTimeout(boardTimer); boardTimer = setTimeout(()=>{ if(location.hash==='#zebricek') zebricek() }, 10000);
+  tvBtn(); fsBtn(); clearTimeout(boardTimer); boardTimer = setTimeout(()=>{ if(location.hash==='#zebricek') zebricek() }, 10000);
 }
 
 
@@ -836,5 +846,5 @@ function route(){
 }
 document.addEventListener('click', e=>{ const g = e.target.closest('[data-go]'); if(!g || g.disabled) return; location.hash = g.dataset.go; if(!g.dataset.go) route() });
 addEventListener('hashchange', route);
-updPts(); sndBtn(); route();
+updPts(); sndBtn(); fsBtn(); route();
 </script>

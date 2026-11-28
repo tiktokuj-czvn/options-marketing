@@ -7,7 +7,7 @@
 function sheet_(){ const ss = SpreadsheetApp.getActive(); return ss.getSheetByName('Body') || ss.insertSheet('Body'); }
 const TASKS_ = ['story','triky','influ','tym','kdo'];
 // Strop bodů za úkol = 100 × násobek úrovně + časový bonus (limit v sekundách), víc se ve hře získat nedá.
-const CAP_ = {story:340, kdo:220, triky:330, influ:380, tym:440};
+const CAP_ = {story:400, kdo:280, triky:390, influ:440, tym:500};
 const P_ = () => PropertiesService.getScriptProperties();
 const json_ = o => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 function hidden_(){ try{ return JSON.parse(P_().getProperty('HIDDEN') || '[]') }catch(e){ return [] } }
