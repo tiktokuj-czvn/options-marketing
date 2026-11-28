@@ -626,7 +626,7 @@ const warn = (msg) => `<div class="warnbox" role="alert">${ic('x','')}<span>${ms
 
 /* ---------- 1 Story ---------- */
 const HOOKS = ['Večeře za 3 minuty, která není z mikrovlnky','Tohle jsem od instantních nudlí nečekal','Učení do noci? Tohle je můj plán B','POV: máš hlad a za 5 minut hraješ ranked','Batátové nudle. Jo, z batátů.','Řekni mi, že jsi to už zkusil. Ne? Tak koukej.'];
-const STORY_CHECKS = ['Hook: první věta nebo text diváka zastaví do 2 sekund','Kelímek Bataronu je v záběru jasně vidět','Řekneš nebo napíšeš, proč to zkusit','Označíš @options a @shortpro'];
+const STORY_CHECKS = ['Hook: první věta nebo text diváka zastaví do 2 sekund','Kelímek Bataronu je v záběru jasně vidět','Řekneš nebo napíšeš, proč to zkusit','Označíš @shortpro a @bataron.official a přidáš #options'];
 let hookI = 0;
 function story(){
   const t = T('story'), sv = state.saved.story || (state.saved.story = {on:[]}), done = isDone('story'); if(!done) startClock(sv);
@@ -637,7 +637,7 @@ function story(){
   <div class="phone"><div class="bars"><i></i><i></i><i></i></div>
     <div class="hook" id="hook">${HOOKS[hookI]}</div>
     <div class="cupwrap" id="storycup">${img('cup-open',190,'photo')}</div>
-    <div class="tags"><span>@options</span><span>@shortpro</span></div></div>
+    <div class="tags"><span>@shortpro</span><span>@bataron.official</span><span>#options</span></div></div>
   <button class="btn ghost full" id="nexthook" style="display:flex;gap:8px;justify-content:center;align-items:center">${ic('dice')} Jiný nápad na hook</button>
   <h3>Kontrolní seznam</h3>
   <div class="checks">${STORY_CHECKS.map((c,i)=>`<button class="check press ${sv.on[i]?'on':''}" data-chk="${i}" ${done?'disabled':''}><span class="box">${ic('check','')}</span><span>${c}</span></button>`).join('')}</div>
@@ -868,7 +868,7 @@ const SLIDES = [
     return `<div class="sl sl-pod"><h2 class="sl-h">Top ${top.length} marketéři dne</h2><div class="xpod">${order.map(i=>`<div class="xpcol c${i+1}"><b class="xpn">${esc(top[i].nick)}</b><span class="xps">${top[i].total} b</span><div class="xpbar"><span>${i+1}.</span></div></div>`).join('')}</div></div>` },
   () => `<div class="sl sl-qr"><div><p class="sl-k">Na jeden den marketérem</p><h2 class="sl-h">Naskenuj a hraj</h2><p class="sl-p">5 zakázek pro Bataron.<br>5 odznaků. Jeden vítěz dne.</p></div><div class="sl-qrbox">${QR_SVG}</div></div>`,
   () => `<div class="sl sl-pts"><h2 class="sl-h">Jak získat body</h2><div class="xlv">${[['Junior',100],['Medior',150],['Senior',200]].map(([n,b],i)=>`<div class="xlvc" style="--d:${.2+i*.35}s"><span>${n}</span><b>${b}</b><small>bodů za zakázku</small></div>`).join('')}</div><p class="sl-p pop" style="--d:1.4s">${ic('clock','')} Každá ušetřená sekunda = 1 bod navíc</p></div>`,
-  () => `<div class="sl sl-cup"><div class="xcups">${img('cup',220,'c1')}${img('cup-open',240,'c2')}${img('cup',220,'c3')}</div><h2 class="sl-h">Natoč Story s Bataronem</h2><p class="sl-tags"><span>@options</span><span>@shortpro</span></p></div>`,
+  () => `<div class="sl sl-cup"><div class="xcups">${img('cup',220,'c1')}${img('cup-open',240,'c2')}${img('cup',220,'c3')}</div><h2 class="sl-h">Natoč Story s Bataronem</h2><p class="sl-tags"><span>@shortpro</span><span>@bataron.official</span><span>#options</span></p></div>`,
   () => `<div class="sl sl-roles"><p class="sl-k">Co se dělá v agentuře?</p><div class="xroles">${[['i-cam','Content creator'],['i-chat','Community manažer'],['i-influ','Influencer marketing'],['i-team','Projektový manažer'],['i-bulb','Kreativec']].map(([im,n],i)=>`<div class="xrole" style="--d:${.15+i*.3}s">${img(im,96)}<span>${n}</span></div>`).join('')}</div><h2 class="sl-h pop" style="--d:1.9s">ShortPRO hledá nové talenty</h2></div>`,
 ];
 function slideLoop(){ if(slideT || !TVSET.anim) return; slideT = setTimeout(showSlide, TVSET.anim*1000) }
