@@ -420,8 +420,25 @@ function setScore(task, pts, secs){
   state.scores[task] = pts; persist();
   countUp(before, total());
   const board = load('sp-board', {}); board[state.nick] = {total:total(), lvl:playerLvl(), star:seniorStar()}; save('sp-board', board);
-  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts, secs, first:((state.raw||{})[task]>=100 && !(state.noBonus||{})[task])?1:0})}).catch(()=>{});
+  state.meta = state.meta||{}; const first = ((state.raw||{})[task]>=100 && !(state.noBonus||{})[task])?1:0;
+  if(pts >= (bestScores()[task]||0)) state.meta[task] = {secs, first: first || (state.meta[task]||{}).first || 0};
+  persist(); syncScores();
 }
+// Výsledky, které server ještě nepotvrdil, se posílají znovu (po načtení a každých 30 s). Server si nechá nejlepší.
+let syncing = false;
+async function syncScores(){
+  if(!SCORE_API || !state.nick || syncing) return;
+  syncing = true; state.sent = state.sent||{};
+  try{
+    for(const [task, pts] of Object.entries(bestScores())){
+      if(state.sent[task] != null && state.sent[task] >= pts) continue;
+      const m = (state.meta||{})[task]||{}, nick = state.nick;
+      const r = await fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick, task, points:pts, secs:m.secs||0, first:m.first||0})});
+      if((await r.text()).trim() === 'ok' && state.nick === nick){ state.sent[task] = pts; persist() }
+    }
+  }catch(e){} finally{ syncing = false }
+}
+setInterval(syncScores, 30000); addEventListener('online', syncScores);
 function updPts(){ $('#pts').textContent = total() + ' b' }
 function countUp(a, b){
   const el = $('#pts'), t0 = performance.now(), d = 700;
@@ -954,6 +971,6 @@ function route(){
 }
 document.addEventListener('click', e=>{ const g = e.target.closest('[data-go]'); if(!g || g.disabled) return; location.hash = g.dataset.go; if(!g.dataset.go) route() });
 addEventListener('hashchange', route);
-updPts(); sndBtn(); fsBtn(); route();
+updPts(); sndBtn(); fsBtn(); route(); syncScores();
 </script>
 </body></html>
