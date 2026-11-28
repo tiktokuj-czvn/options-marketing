@@ -833,7 +833,7 @@ function kdo(){
   const t = T('kdo'), sv = state.saved.kdo || (state.saved.kdo = {match:{}, tries:0, ok:[], bad:[]});
   const match = sv.match, done = isDone('kdo'), okSet = new Set(sv.ok), badSet = new Set(sv.bad); if(!done) startClock(sv);
   const nameOf = id => CAST.find(c=>c[0]===id)[1];
-  if(armed==null || match[armed]!=null || okSet.has(armed)){ const n = LINES.findIndex((l,i)=>match[i]==null); armed = n<0?null:n }
+  if(armed==null || okSet.has(armed)){ const n = LINES.findIndex((l,i)=>match[i]==null); armed = n<0?null:n }
   app.innerHTML = `${header(t)}<h2>Kdo to řekl?</h2>
   ${done ? result('kdo', 'Všech 5 vět máš přiřazených správně. Teď víš, kdo v agentuře co řeší.', sv.tries) :
   `<p class="lead">Klepni na větu a pak dole na člověka, který ji na poradě nejspíš řekl. Jeden člověk je navíc.</p>
