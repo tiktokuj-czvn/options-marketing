@@ -34,7 +34,7 @@ svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .who{display:grid;gap:6px;justify-items:start}
 .adm{display:grid;gap:12px}.adm h3{margin-top:6px}.arow{display:flex;gap:8px;flex-wrap:wrap}
 .alist{display:grid;gap:6px}.ap{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-.ap.off{opacity:.5}.ap.off b{text-decoration:line-through}.btn.sm{padding:7px 12px;font-size:.9rem}.btn.sure{background:#B3261E}
+.ap.off{opacity:.5}.ap.off b{text-decoration:line-through}.btn.sm{padding:7px 12px;font-size:.9rem}.btn.sure{background:#B3261E}.btn.sure2{background:var(--navy)}.result .btn.ghost{background:transparent;color:#fff;border:2px solid #ffffff99}.btn.ghost.sure2{background:var(--mag);color:#fff;border-color:var(--mag)}.surenote{text-align:center;margin-top:6px}
 .aset{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .aset select,.aset input{font:inherit;max-width:55%}
 .rules{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
@@ -410,14 +410,16 @@ const triesPts = tries => Math.max(40, 100 - 20*(tries-1));
 let state = load('sp-state2', {});
 state = Object.assign({nick:'', scores:{}, saved:{}}, state);
 const persist = () => save('sp-state2', state);
-const total = () => Object.values(state.scores).reduce((a,b)=>a+b,0);
+// Lepší výsledek z opakovaných pokusů (state.best) se počítá do součtu i úrovně
+const bestScores = () => { const o = Object.assign({}, state.best||{}); Object.entries(state.scores).forEach(([k,v])=>{ o[k] = Math.max(o[k]||0, v) }); return o };
+const total = () => Object.values(bestScores()).reduce((a,b)=>a+b,0);
 const isDone = id => state.scores[id] != null;
 function setScore(task, pts, secs){
   const before = total();
   state.scores[task] = pts; persist();
   countUp(before, total());
   const board = load('sp-board', {}); board[state.nick] = {total:total(), lvl:playerLvl(), star:seniorStar()}; save('sp-board', board);
-  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts, secs, first:((state.raw||{})[task]>=100)?1:0})}).catch(()=>{});
+  if(SCORE_API) fetch(SCORE_API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({nick:state.nick, task, points:pts, secs, first:((state.raw||{})[task]>=100 && !(state.noBonus||{})[task])?1:0})}).catch(()=>{});
 }
 function updPts(){ $('#pts').textContent = total() + ' b' }
 function countUp(a, b){
@@ -442,8 +444,8 @@ const elapsed = id => Math.round((Date.now() - ((state.saved[id]||{}).start || D
 const mmss = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 function runClock(id){
   clearInterval(clockTimer);
-  const tick = () => { const el = $('#clock'); if(!el || isDone(id)){ if(isDone(id)) clearInterval(clockTimer); return } const left = LIMIT[id] - elapsed(id);
-    el.innerHTML = left > 0 ? `${ic('clock','')}<span>Bonus za rychlost: <b>${mmss(left)}</b></span>` : `${ic('clock','')}<span>Bonus za rychlost vypršel, body za správnost platí dál.</span>`;
+  const tick = () => { const el = $('#clock'); if(!el || isDone(id)){ if(isDone(id)) clearInterval(clockTimer); return } const rep = (state.noBonus||{})[id], left = rep ? 0 : LIMIT[id] - elapsed(id);
+    el.innerHTML = rep ? `${ic('clock','')}<span>Opakování: bez bonusu za rychlost, body jen za správnost.</span>` : left > 0 ? `${ic('clock','')}<span>Bonus za rychlost: <b>${mmss(left)}</b></span>` : `${ic('clock','')}<span>Bonus za rychlost vypršel, body za správnost platí dál.</span>`;
     el.classList.toggle('out', left <= 0); el.classList.toggle('hurry', left > 0 && left <= 30) };
   tick(); clockTimer = setInterval(tick, 1000);
 }
@@ -492,7 +494,7 @@ function tvBtn(){ const b = $('#tvsnd'); if(!b) return; b.classList.toggle('on',
 document.addEventListener('click', e=>{ if(e.target.closest('#tvsnd')){ TV.on ? tvStop() : tvStart() } });
 
 function award(id, base){
-  const secs = elapsed(id), bonus = base >= 100 ? Math.max(0, LIMIT[id] - secs) : 0;
+  const secs = elapsed(id), bonus = (state.noBonus||{})[id] ? 0 : base >= 100 ? Math.max(0, LIMIT[id] - secs) : 0;
   state.bonus = state.bonus || {}; state.secs = state.secs || {}; state.raw = state.raw || {};
   state.bonus[id] = bonus; state.secs[id] = secs; state.raw[id] = base; clearInterval(clockTimer);
   setScore(id, Math.round(base * MULT[T(id).lvl]) + bonus, secs); fx('win', 'Schváleno!');
@@ -512,9 +514,9 @@ function fx(kind, msg, v){
 const MULT = {Junior:1, Medior:1.5, Senior:2};
 const STAR = '<svg class="star" viewBox="0 0 24 24" aria-label="Senior marketér"><path d="M12 2.5l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
 /* úroveň hráče: Junior = Story + Kdo, Medior = + kvíz, Senior = všech 5 */
-function playerLvl(sc = state.scores){ const d = id => sc[id] != null;
+function playerLvl(sc = bestScores()){ const d = id => sc[id] != null;
   return TASKS.every(t=>d(t.id)) ? 'Senior' : d('story')&&d('kdo')&&d('triky') ? 'Medior' : d('story')&&d('kdo') ? 'Junior' : '' }
-const seniorStar = () => { const r = state.raw||{}; return r.influ>=100 && r.tym>=100 };
+const seniorStar = () => { const nb = state.noBonus||{}, r0 = state.raw||{}, r = {influ: nb.influ ? 0 : r0.influ, tym: nb.tym ? 0 : r0.tym}, b = state.rawBest||{}; return Math.max(r.influ||0,b.influ||0)>=100 && Math.max(r.tym||0,b.tym||0)>=100 };
 const lvlTag = (l, star) => l ? `<span class="lvl lvl-${l.toLowerCase()}">${l}${star?STAR:''}</span>` : '';
 function shake(el){ if(!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake') }
 
@@ -595,12 +597,29 @@ function result(task, text, tries, fresh){
   <span class="bigstamp">SCHVÁLENO</span>
   <span class="badge-name">Odznak: ${t.badge}</span>${starNow?`<span class="badge-name extra">${STAR} Extra odznak: Senior marketér</span>`:''}
   <span class="big">${pts} b</span>
-  <p class="tries">${lv}. ${bonus ? `Za správnost ${base} b + bonus za rychlost ${bonus} b (hotovo za ${mmss(secs||0)}).` : raw>=100 ? `Za správnost ${base} b. Bonus za rychlost už vypršel.` : `Za správnost ${base} b. Bonus za rychlost je jen za výsledek bez chyby.`}</p>
+  <p class="tries">${lv}. ${(state.noBonus||{})[task] ? `Opakování: ${base} b za správnost, bonus za rychlost se u opakování nedává.` : bonus ? `Za správnost ${base} b + bonus za rychlost ${bonus} b (hotovo za ${mmss(secs||0)}).` : raw>=100 ? `Za správnost ${base} b. Bonus za rychlost už vypršel.` : `Za správnost ${base} b. Bonus za rychlost je jen za výsledek bez chyby.`}</p>
   <p>${text}</p>
   ${task!=='story'?`<p class="tries">${tries===1?'Napoprvé, bez jediné chyby.':`Zvládnuto na ${tries}. pokus. Čím méně pokusů, tím víc bodů.`}</p>`:''}
   <p>Ukaž tuhle obrazovku u stánku ShortPRO a vyzvedni si razítko v aplikaci Options.</p>
-  <button class="btn full" data-go="">Další zakázka</button></div>`;
+  ${(state.best||{})[task] > pts ? `<p class="tries">Do žebříčku se ti počítá lepší výsledek z dřívějška: ${state.best[task]} b.</p>` : ''}
+  <button class="btn full" data-go="">Další zakázka</button>
+  <button class="btn ghost full" data-redo="${task}" type="button">Udělat zakázku znovu</button></div>`;
 }
+// Opakování zakázky: lepší výsledek zůstává, nový pokus začíná od nuly i s časem
+document.addEventListener('click', e=>{ const b = e.target.closest('[data-redo]'); if(!b) return; const id = b.dataset.redo;
+  if(!b.classList.contains('sure2')){ b.classList.add('sure2'); b.textContent = 'Začít znovu? Bez bonusu za čas, lepší výsledek ti zůstane. Klepni znovu'; buzz(10);
+    setTimeout(()=>{ if(b.isConnected){ b.classList.remove('sure2'); b.textContent = 'Udělat zakázku znovu' } }, 6000); return }
+  state.best = state.best||{}; state.rawBest = state.rawBest||{};
+  if(state.scores[id] != null) state.best[id] = Math.max(state.best[id]||0, state.scores[id]);
+  if((state.raw||{})[id] != null) state.rawBest[id] = Math.max(state.rawBest[id]||0, state.raw[id]);
+  delete state.scores[id]; delete state.saved[id]; state.noBonus = state.noBonus||{}; state.noBonus[id] = true; persist(); updPts();
+  if(location.hash.slice(1) === id) route(); else location.hash = id });
+// Potvrzení před odesláním: první klepnutí se zeptá, odpovědi jdou ještě změnit
+function armSure(b){ if(!b) return; const go = b.onclick, txt = b.textContent; let tm;
+  b.onclick = e => { if(!b.classList.contains('sure2')){ b.classList.add('sure2'); b.textContent = 'Opravdu odeslat? Klepni znovu'; buzz(10);
+      const n = document.createElement('p'); n.className = 'hint surenote'; n.textContent = 'Ještě můžeš cokoli upravit. Až budeš mít jistotu, klepni znovu.'; b.after(n);
+      tm = setTimeout(()=>{ if(b.isConnected){ b.classList.remove('sure2'); b.textContent = txt; n.remove() } }, 7000); return }
+    clearTimeout(tm); go(e) } }
 const toRes = () => { const r = $('#res'); if(r) r.scrollIntoView({behavior:'smooth', block:'center'}) };
 const warn = (msg) => `<div class="warnbox" role="alert">${ic('x','')}<span>${msg}</span></div>`;
 
@@ -746,7 +765,7 @@ function influ(){
     sv.msg = bad ? 'Klient to vrátil: aspoň jeden vybraný profil se pro Bataron nehodí. Podívej se znovu na publikum, engagement a témata.'
                  : 'Klient to vrátil: dobrý začátek, ale za tenhle rozpočet se dá oslovit víc správných lidí.';
     persist(); buzz([30,40,30]); fx('bad','Klient to vrátil', sv.tries>2 ? 'bad3' : bad ? 'influ_bad' : 'influ_more'); influ(); window.scrollTo(0,0); shake(app.querySelector('.warnbox'));
-  };
+  }; armSure(s);
 }
 
 /* ---------- 4 Tým ---------- */
@@ -785,7 +804,7 @@ function tym(){
     sv.tries++; sv.checked = CAMPS.map((c,ci)=>campOk(ci)); persist();
     if(sv.checked.every(Boolean)){ result('tym','',sv.tries,true); tym(); window.scrollTo(0,0); return }
     buzz([30,40,30]); fx('bad','Ještě to nesedí', sv.tries>2 ? 'bad2' : 'tym_bad'); tym(); app.querySelectorAll('.camp.wrong').forEach(shake); const w = app.querySelector('.camp.wrong'); if(w) w.scrollIntoView({behavior:'smooth', block:'center'});
-  };
+  }; armSure(s);
 }
 
 /* ---------- 5 Kdo to řekl ---------- */
@@ -835,7 +854,7 @@ function kdo(){
     sv.ok=[...okSet]; sv.bad=[...badSet]; persist();
     if(okSet.size===LINES.length){ result('kdo','',sv.tries,true); kdo(); window.scrollTo(0,0); return }
     buzz([30,40,30]); fx('bad','Ještě to nesedí', sv.tries>2 ? 'bad2' : 'kdo_bad'); armed = LINES.findIndex((l,i)=>match[i]==null); kdo(); window.scrollTo(0,0); app.querySelectorAll('.quote.bad').forEach(shake);
-  };
+  }; armSure(s);
 }
 
 /* ---------- Žebříček (pro TV monitor) ---------- */
