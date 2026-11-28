@@ -226,7 +226,27 @@ details.legend summary{cursor:pointer;font-weight:700}
 .chip{min-height:44px}
 body.tvmode .bar{display:none}
 body.tvmode .wrap{max-width:none}
-body.tvmode{padding-block:16px}
+body.tvmode{padding-block:16px;min-height:100dvh;box-sizing:border-box;background:var(--navy);position:relative;overflow-x:hidden}
+html:has(body.tvmode){background:var(--navy)}
+body.tvmode::after{content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:radial-gradient(38% 42% at 18% 28%,rgba(48,227,202,.30),transparent 70%),radial-gradient(34% 40% at 82% 72%,rgba(210,42,136,.30),transparent 70%),radial-gradient(30% 34% at 70% 18%,rgba(48,227,202,.16),transparent 70%);
+  animation:tvglow 18s ease-in-out infinite alternate}
+@keyframes tvglow{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(4%,-3%) rotate(8deg)}100%{transform:translate(-4%,3%) rotate(-6deg)}}
+body.tvmode .wrap{position:relative;z-index:1}
+body.tvmode .tv{background:transparent;padding:6px 6px 0;min-height:calc(100dvh - 32px);box-sizing:border-box;grid-template-rows:auto 1fr auto}
+body.tvmode .tvgrid{align-items:stretch}
+body.tvmode .tvmain{align-content:start}
+body.tvmode .tv{position:relative;z-index:1}
+@media (max-width:899px){.tvfloat{display:none}}
+body.tvmode .tvqr{align-content:center;box-shadow:0 20px 50px -20px rgba(0,0,0,.6)}
+body.tvmode .tvqr .qrbox{width:min(100%,44vh);max-width:none}
+body.tvmode .lb{background:rgba(31,66,82,.82);backdrop-filter:blur(4px)}
+body.tvmode .lb.p1{background:var(--turq)}body.tvmode .lb.p2{background:#CFE0E6}body.tvmode .lb.p3{background:#F3C2DD}
+body.tvmode .empty{background:rgba(31,66,82,.7);text-align:center;padding:6vh 24px}
+.tvfloat{position:fixed;z-index:0;pointer-events:none;opacity:.22;animation:tvfloat 14s ease-in-out infinite}
+.tvfloat.f2{animation-duration:17s;animation-delay:-6s}.tvfloat.f3{animation-duration:20s;animation-delay:-11s}
+@keyframes tvfloat{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-36px) rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){body.tvmode::after,.tvfloat{animation:none}}
 .tvgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
 @media (min-width:900px){.tvgrid{grid-template-columns:minmax(0,1fr) minmax(220px,24vw)}}
 .tvmain{display:grid;gap:14px;min-width:0}
@@ -783,7 +803,7 @@ async function zebricek(){
     : `<div class="empty">Zatím tu nikdo není. Naskenuj QR a buď první.</div>`;
   const live = $('#tvboard');
   if(live){ if(live.dataset.h !== boardHtml){ live.innerHTML = boardHtml; live.dataset.h = boardHtml } }
-  else { app.innerHTML = `<div class="tv"><div class="tvtop"><button class="back" data-go="">${ic('back')} Zpět do hry</button><span class="tvbtns"><button class="tvsnd fsbtn" id="tvfs" type="button"></button><button class="tvsnd" id="tvsnd"></button></span></div>
+  else { app.innerHTML = `<div class="tvfloat" style="left:2vw;bottom:4vh">${img('cup',160)}</div><div class="tvfloat f2" style="left:44vw;bottom:-2vh">${img('cup-open',140)}</div><div class="tvfloat f3" style="right:28vw;top:6vh">${img('batat',110)}</div><div class="tv"><div class="tvtop"><button class="back" data-go="">${ic('back')} Zpět do hry</button><span class="tvbtns"><button class="tvsnd fsbtn" id="tvfs" type="button"></button><button class="tvsnd" id="tvsnd"></button></span></div>
   <div class="tvgrid"><div class="tvmain"><div class="tvhead">${img('trofej',90)}<h1>Nejlepší marketéři dne</h1></div>
   <div class="board" id="tvboard"></div></div>
   <aside class="tvqr"><div class="qrbox">${QR_SVG}</div><b>Hraj taky</b><span>Naskenuj a splň 5 zakázek pro Bataron</span></aside></div>
